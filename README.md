@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gamified Stock Market Web App
 
-## Getting Started
+## Phase 1: Core Infrastructure and User Management (Weeks 1-2)
 
-First, run the development server:
+### Deliverables
+**User Authentication**
+- Implement login/signup with Clerk or Firebase.
+- Create user profiles to track progress and virtual wallet balance.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Dashboard with Start Button**
+- Design a simple dashboard showing:
+  - "Start Game" button.
+  - Current progress (e.g., levels completed).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Backend and Database**
+- Use Node.js and PostgreSQL with Prisma for:
+  - User data.
+  - Level progress tracking.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Tasks
+- Real-time stock market integration via APIs.
+- Build intuitive level screens with instructions and quizzes.
+- Create database tables for users, levels, and transactions.
+- Deploy the backend and frontend (e.g., Vercel, AWS).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Phase 2: Game Mechanics and Levels (Weeks 3-6)
 
-To learn more about Next.js, take a look at the following resources:
+### Week 3-4: Level Management
+- **Implement Basic Levels (1-5):**
+  - Teach users how to buy/sell stocks and understand basic stock concepts.
+  - Simulate a stock market with API data.
+- **Progress Tracking:**
+  - Ensure users can unlock levels after completing tasks.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Week 5-6: Simulated Stock Trading
+- **Add a Basic Trading System:**
+  - Allow users to buy/sell dummy stocks with virtual currency.
+  - Deduct/add virtual money based on transactions.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Phase 3: Gamification and Rewards (Weeks 7-9)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Achievements and Rewards Module
+- Add points, badges, and progress bars.
+- Display achievements on the dashboard.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Leaderboard
+- Rank users based on portfolio performance.
+- Use Redis or a simple API for real-time leaderboard updates.
+
+### Intermediate Levels (6-10)
+- Introduce fundamental analysis concepts (e.g., financial ratios, income statements).
+- Keep content interactive with infographics and quizzes.
+
+---
+
+## Phase 4: Testing, Optimization, and Deployment (Weeks 10-12)
+
+### Final Features
+- Implement a basic admin dashboard for level and user management.
+- Add a tutorial for first-time users.
+
+### Optimization
+- Test APIs for scalability.
+- Ensure frontend is mobile-responsive.
+
+### Deployment
+- Use Vercel for frontend and AWS for backend.
+
+---
+
+## Deprioritized Features (for Post-MVP)
+- Advanced levels like technical analysis and portfolio management.
+- Real-time stock market integration via APIs.
+- Community forums or discussions.
+
+---
+
+## Simplified Timeline Summary
+
+| **Week** | **Deliverables**                                 |
+|----------|--------------------------------------------------|
+| 1-2      | User authentication, dashboard setup, backend.   |
+| 3-4      | Basic levels (1-5), progress tracking.           |
+| 5-6      | Stock trading system, mock data integration.     |
+| 7-9      | Rewards, achievements, leaderboard, levels 6-10. |
+| 10-12    | Final testing, admin dashboard, deployment.      |
