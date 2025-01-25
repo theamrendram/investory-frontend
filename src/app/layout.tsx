@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Investory",
-  description: "Investory is a stock market simulator, built with the purpose of learning and fun.",
+  description:
+    "Investory is a stock market simulator, built with the purpose of learning and fun.",
 };
 
 export default function RootLayout({
@@ -25,8 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
