@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { signInWithGoogle } from "@/firebase/auth";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/firebase/firebase";
-
+import { signInWithGoogle } from "@/firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { useUserStore } from "@/store/user-store";
+import { setuid } from "process";
 const Login = () => {
   const [error, setError] = useState("");
+  const user = useUserStore((state) => state.user);
   const router = useRouter();
   const handleGoogleSignIn = async () => {
     try {

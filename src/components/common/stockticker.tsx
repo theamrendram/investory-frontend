@@ -33,12 +33,10 @@ export interface StockData {
 interface StockTickerProps {
   speed?: number;
   pauseonhover?: boolean;
-  className?: string;
 }
 export default function StockTicker({
   speed = 1,
   pauseonhover = true,
-  className = "",
 }: StockTickerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [duplicatedStocks, setduplicateStocks] = useState<StockData[]>([]);
@@ -59,7 +57,7 @@ export default function StockTicker({
   };
   return (
     <div
-      className={`overflow-hidden ${className} bg-[#1a202c] text-white min-h-[40px]`}
+      className={`overflow-hidden bg-black text-white min-h-[40px]`}
     >
       <div
         className={
@@ -67,13 +65,13 @@ export default function StockTicker({
         }
         style={{
           animation:
-            `ticker 5000ms linear infinite`,
+            `ticker 10000ms linear infinite`,
         }}
         ref={scrollRef}
       >
         {duplicatedStocks.map((stock, index) => (
           <div
-            key={"${stock.symbol}-${index}"}
+            key={`${stock.symbol}-${index}`}
             className="inline-flex items-center px-4 py-1"
           >
             <span className="font-medium mr-2">{stock.symbol} </span>
