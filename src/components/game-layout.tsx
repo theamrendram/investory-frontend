@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useUserStore } from "@/store/user-store";
 
 interface GameLayoutProps {
   children: ReactNode;
@@ -40,7 +41,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
     ? Number.parseInt(pathname.split("/levels/")[1])
     : 0;
   const [balance, setBalance] = useState(10000);
-
+  const user = useUserStore((state) => state.user);
   const levels = [
     { id: 1, name: "The Market Awakens", completed: currentLevel > 1 },
     { id: 2, name: "The IPO Mystery", completed: currentLevel > 2 },
@@ -128,14 +129,13 @@ export default function GameLayout({ children }: GameLayoutProps) {
             <div className="px-4 py-2">
               <div className="mb-4 flex items-center gap-4 rounded-lg border p-3">
                 <Avatar>
-                  <AvatarImage
-                    src="/placeholder.svg?height=40&width=40"
-                    alt="Avatar"
-                  />
+                  <AvatarImage src={user?.avatar || ""} alt="Avatar" />
                   <AvatarFallback>AM</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">Aman</p>
+                  <p className="text-sm font-medium">
+                    {user?.name || "batman"}{" "}
+                  </p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <CreditCard className="h-3 w-3" />
                     <span>₹{balance.toLocaleString()}</span>

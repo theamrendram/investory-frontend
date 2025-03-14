@@ -40,18 +40,14 @@ const Navbar = () => {
 
       <div className="flex items-center space-x-4">
         {/* CHANGE: Added More dropdown and adjusted icons */}
-        <button className="flex items-center space-x-1 hover:text-green-500">
-          <PieChart size={20} />
-          <span>Portfolio</span>
-        </button>
-        <button className="flex items-center space-x-1 hover:text-green-500">
-          <CreditCard size={20} />
-          <span>Credit</span>
-        </button>
-        <button className="flex items-center space-x-1 hover:text-green-500">
-          <span>More</span>
-          <ChevronDown size={16} />
-        </button>
+        <Button
+        variant={"outline"}
+        className="bg-slate-600 hover:bg-slate-500"
+          onClick={() => {
+            window.location.href = "/dashboard";
+          }}>
+          Go to Dashboard
+        </Button>
         <ClientOnly>
           {user === null ? (
             <Button
@@ -61,9 +57,9 @@ const Navbar = () => {
               Sign In
             </Button>
           ) : (
-            <div className="">
-              <p>{user.displayName}</p>
-              <Button onClick={() => signOutUser()}>Sign Out</Button>
+            <div className="flex items-center gap-1">
+              <p className="font-medium">{user.name?.split(" ")[0]}</p>
+              <Button onClick={() => signOutUser()} className="text-red-500">Sign Out</Button>
             </div>
           )}
         </ClientOnly>

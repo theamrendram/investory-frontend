@@ -4,20 +4,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 interface User {
   uid: string;
   email: string | null;
-  emailVerified: boolean;
-  displayName: string | null;
-  isAnonymous: boolean;
-  photoURL: string | null;
-  createdAt?: string;
-  lastLoginAt?: string;
-  apiKey?: string;
-  appName?: string;
-  providerData?: any[];
-  stsTokenManager?: {
-    refreshToken: string;
-    accessToken: string;
-    expirationTime: number;
-  };
+  name: string | null;
+  avatar: string | null
 }
 
 interface UserStore {
