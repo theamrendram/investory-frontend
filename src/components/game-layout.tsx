@@ -40,8 +40,8 @@ export default function GameLayout({ children }: GameLayoutProps) {
   const currentLevel = pathname.includes("/levels/")
     ? Number.parseInt(pathname.split("/levels/")[1])
     : 0;
-  const [balance, setBalance] = useState(10000);
-  const user = useUserStore((state) => state.user);
+    const user = useUserStore((state) => state.user);
+    const [balance, setBalance] = useState(user?.amount || 10000);
   const levels = [
     { id: 1, name: "The Market Awakens", completed: currentLevel > 1 },
     { id: 2, name: "The IPO Mystery", completed: currentLevel > 2 },

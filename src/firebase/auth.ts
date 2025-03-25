@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { useUserStore } from "@/store/user-store";
+import axios from "axios";
 const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
@@ -14,23 +15,36 @@ const signInWithGoogle = async () => {
     console.log("User signed in:", result.user);
     const user = result.user;
 
-    if (user) {
+    // check if user exists in database
+    const getUser = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users`,
+      {
+        firebase_id: user.uid,
+        name: user.displayName,
+        email: user.email,
+      }
+    );
+    console.log("get user", getUser);
+
+    // set user in store
+    if (user && getUser) {
       const userData = {
         uid: user.uid,
         name: user.displayName,
         email: user.email,
         avatar: user.photoURL,
+        amount: getUser.data.amount,
       };
       const setUser = useUserStore.getState().setUser;
       console.log("user data", userData);
       setUser(userData as any);
     }
-    return
+    return;
   } catch (error) {
     console.error("Error during sign-in:", error);
   }
 };
-
+// handleLogin and handleSignUp functions
 const handleLogin = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -61,6 +75,7 @@ const handleSignUp = async (email: string, password: string) => {
   }
 };
 
+// signOutUser function
 const signOutUser = async () => {
   try {
     await signOut(auth);

@@ -5,7 +5,8 @@ interface User {
   uid: string;
   email: string | null;
   name: string | null;
-  avatar: string | null
+  avatar: string | null;
+  amount: number | null;
 }
 
 interface UserStore {
