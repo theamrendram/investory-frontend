@@ -40,8 +40,8 @@ export default function GameLayout({ children }: GameLayoutProps) {
   const currentLevel = pathname.includes("/levels/")
     ? Number.parseInt(pathname.split("/levels/")[1])
     : 0;
-    const user = useUserStore((state) => state.user);
-    const [balance, setBalance] = useState(user?.amount || 10000);
+  const user = useUserStore((state) => state.user);
+  const [balance, setBalance] = useState(user?.amount || 10000);
   const levels = [
     { id: 1, name: "The Market Awakens", completed: currentLevel > 1 },
     { id: 2, name: "The IPO Mystery", completed: currentLevel > 2 },
@@ -74,7 +74,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
               <nav className="flex flex-col gap-4 py-4">
                 <Link href="/" className="flex items-center gap-2 px-2 py-1">
                   <TrendingUp className="h-5 w-5" />
-                  <span className="text-lg font-semibold">StockSage</span>
+                  <span className="text-lg font-semibold">Investory</span>
                 </Link>
                 <div className="flex flex-col gap-2 px-2">
                   <Link
@@ -107,7 +107,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
           </Sheet>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            <span className="text-lg font-semibold">StockSage</span>
+            <span className="text-lg font-semibold">Investory</span>
           </div>
           <div className="ml-auto flex items-center gap-4">
             <div className="flex items-center gap-1">
@@ -122,7 +122,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
           <SidebarHeader className="border-b px-6 py-3">
             <Link href="/" className="flex items-center gap-2">
               <TrendingUp className="h-6 w-6" />
-              <span className="text-xl font-bold">StockSage</span>
+              <span className="text-xl font-bold">Investory</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>
