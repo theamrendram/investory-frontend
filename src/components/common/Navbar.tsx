@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { signInWithGoogle, signOutUser } from "@/firebase/auth";
 import { useUserStore } from "@/store/user-store";
-
 import { Button } from "../ui/button";
 import ClientOnly from "./client-only";
 
+import logo from "../../../public/investory.png";
 const Navbar = () => {
   const user = useUserStore((state) => state.user);
 
@@ -21,7 +21,8 @@ const Navbar = () => {
     <nav className="bg-primary text-white px-6 py-3 flex items-center justify-between h-16 w-full">
       {/* Logo section */}
       <div className="flex items-center space-x-4">
-        <div className="text-2xl font-bold">Project</div>
+        <div className="text-2xl font-bold">Investory
+        </div>
       </div>
       {/* Search bar */}
       <div className="flex-grow mx-8">
@@ -41,8 +42,8 @@ const Navbar = () => {
       <div className="flex items-center space-x-4">
         {/* CHANGE: Added More dropdown and adjusted icons */}
         <Button
-        variant={"outline"}
-        className="bg-slate-600 hover:bg-slate-500"
+          variant={"outline"}
+          className="bg-slate-600 hover:bg-slate-500"
           onClick={() => {
             window.location.href = "/dashboard";
           }}>
@@ -59,7 +60,9 @@ const Navbar = () => {
           ) : (
             <div className="flex items-center gap-1">
               <p className="font-medium">{user.name?.split(" ")[0]}</p>
-              <Button onClick={() => signOutUser()} className="text-red-500">Sign Out</Button>
+              <Button onClick={() => signOutUser()} className="text-red-500">
+                Sign Out
+              </Button>
             </div>
           )}
         </ClientOnly>
