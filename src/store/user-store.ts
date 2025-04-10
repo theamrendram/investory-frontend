@@ -7,6 +7,7 @@ interface User {
   name: string | null;
   avatar: string | null;
   amount: number | null;
+  level: number | null;
 }
 
 interface UserStore {

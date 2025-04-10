@@ -33,7 +33,8 @@ const signInWithGoogle = async () => {
         name: user.displayName,
         email: user.email,
         avatar: user.photoURL,
-        amount: getUser.data.amount,
+        amount: Math.round(getUser.data.amount),
+        level: getUser.data.currentLevel,
       };
       const setUser = useUserStore.getState().setUser;
       console.log("user data", userData);

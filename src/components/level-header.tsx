@@ -31,7 +31,7 @@ export default function LevelHeader({
       <div className="flex items-center gap-2">
         {levelId > 1 && (
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/levels/${levelId - 1}`}>
+            <Link href={`/dashboard/levels/${levelId - 1}`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Previous Level
             </Link>
@@ -39,7 +39,7 @@ export default function LevelHeader({
         )}
         {levelId < 5 && !isCompleted && (
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/levels/${levelId + 1}`}>
+            <Link href={`/dashboard/levels/${levelId + 1}`}>
               Next Level
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

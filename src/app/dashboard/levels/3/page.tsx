@@ -103,7 +103,7 @@ export default function Level3Page() {
 
   const completeLevel = () => {
     // In a real app, you would save progress to the backend here
-    router.push("/levels/4");
+    router.push("/dashboard/levels/4");
   };
 
   const handleEventTypeChange = (eventId: number, value: string) => {

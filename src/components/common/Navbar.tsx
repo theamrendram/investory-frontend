@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Search,
   PieChart,
@@ -13,16 +13,13 @@ import { useUserStore } from "@/store/user-store";
 import { Button } from "../ui/button";
 import ClientOnly from "./client-only";
 
-import logo from "../../../public/investory.png";
 const Navbar = () => {
   const user = useUserStore((state) => state.user);
-
   return (
     <nav className="bg-primary text-white px-6 py-3 flex items-center justify-between h-16 w-full">
       {/* Logo section */}
       <div className="flex items-center space-x-4">
-        <div className="text-2xl font-bold">Investory
-        </div>
+        <div className="text-2xl font-bold">Investory</div>
       </div>
       {/* Search bar */}
       <div className="flex-grow mx-8">
@@ -41,14 +38,16 @@ const Navbar = () => {
 
       <div className="flex items-center space-x-4">
         {/* CHANGE: Added More dropdown and adjusted icons */}
-        <Button
-          variant={"outline"}
-          className="bg-slate-600 hover:bg-slate-500"
-          onClick={() => {
-            window.location.href = "/dashboard";
-          }}>
-          Go to Dashboard
-        </Button>
+        {user && (
+          <Button
+            variant={"outline"}
+            className="bg-slate-600 hover:bg-slate-500"
+            onClick={() => {
+              window.location.href = "/dashboard";
+            }}>
+            Go to Dashboard
+          </Button>
+        )}
         <ClientOnly>
           {user === null ? (
             <Button
