@@ -24,7 +24,8 @@
       "@/firebase": ["./src/firebase"],
       "@/lib": ["./src/lib"],
       "@/public": ["./public"],
-      "@/store": ["./src/store"]
+      "@/store": ["./src/store"],
+      "@/types": ["./types"],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
