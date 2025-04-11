@@ -22,6 +22,7 @@ import HelpCard from "@/components/help-card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import nse_logo from "@/public/nse.png";
+import { usePathname } from "next/navigation";
 
 const levelData = {
   id: 1,
@@ -67,6 +68,9 @@ const companies = [
 
 export default function Level1Page() {
   const router = useRouter();
+  const pathname = usePathname();
+  const levelPath = pathname.split("/").pop();
+  console.log("Level Path:", levelPath);
   const [activeTab, setActiveTab] = useState("story");
   const [tasks, setTasks] = useState(levelData.tasks);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -98,6 +102,10 @@ export default function Level1Page() {
 
   const completeLevel = () => {
     // In a real app, you would save progress to the backend here
+    if(!isCompleted) {
+      alert("Please complete all tasks before proceeding.");
+      return;
+    }
     router.push("./2");
   };
 
@@ -360,13 +368,13 @@ export default function Level1Page() {
                             <div className="rounded-lg border p-3">
                               <div className="mb-2 aspect-video w-full overflow-hidden rounded-lg bg-muted">
                                 <div className="flex h-full items-center justify-center">
-                                    <Image
-                                      src={"/bse.webp"}
-                                      width={100}
-                                      height={100}
-                                      alt="National Stock Exchange"
-                                      className="w-full h-full"
-                                    />
+                                  <Image
+                                    src={"/bse.webp"}
+                                    width={100}
+                                    height={100}
+                                    alt="National Stock Exchange"
+                                    className="w-full h-full"
+                                  />
                                 </div>
                               </div>
                               <RadioGroup>

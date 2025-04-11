@@ -37,7 +37,7 @@ export default function LevelHeader({
             </Link>
           </Button>
         )}
-        {levelId < 5 && !isCompleted && (
+        {/* {levelId < 5 && !isCompleted && (
           <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/levels/${levelId + 1}`}>
               Next Level
@@ -56,7 +56,7 @@ export default function LevelHeader({
               "Complete Game"
             )}
           </Button>
-        )}
+        )} */}
       </div>
     </div>
   );
