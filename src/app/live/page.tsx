@@ -5,13 +5,16 @@ import { io } from "socket.io-client";
 export default function LiveFeed() {
   const [nifty50, setNifty50] = useState(null);
   const [bankNifty, setBankNifty] = useState(null);
+  const [midcap100, setMidcap100] = useState(null);
+  const [nifty100, setNifty100] = useState(null);
+  const [niftyIT, setNiftyIT] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io("http://localhost:8000"); // Update if your backend is hosted elsewhere
+    const socket = io("http://localhost:8000");
 
     socket.on("connect", () => {
-      console.log("✅ Connected to backend");
+      console.log("✅ Connected to backend"); 
       setConnected(true);
     });
 
@@ -21,51 +24,44 @@ export default function LiveFeed() {
     });
 
     socket.on("marketData", (msg) => {
-      console.log(msg);
+      console.log("msg", msg);
       if (msg.type === "live_feed" && msg.feeds) {
-        const bank = msg.feeds["NSE_INDEX|Nifty Bank"];
-        const nifty = msg.feeds["NSE_INDEX|Nifty 50"];
+        const processFeed = (key: string, name: string, setter: Function) => {
+          const data = msg.feeds[key];
+          console.log("data", key, data);
+          if (data) {
+            const feed = data.fullFeed.indexFF;
+            const price = feed.ltpc.ltp;
+            const prevClose = feed.ltpc.cp;
+            const ohlc = feed.marketOHLC.ohlc.find(
+              (o: any) => o.interval === "1d"
+            );
 
-        if (bank) {
-          const feed = bank.fullFeed.indexFF;
-          const price = feed.ltpc.ltp;
-          const prevClose = feed.ltpc.cp;
-          const ohlc = feed.marketOHLC.ohlc.find(
-            (o: any) => o.interval === "1d"
-          );
+            setter({
+              name,
+              price,
+              prevClose,
+              change: price - prevClose,
+              percentChange: ((price - prevClose) / prevClose) * 100,
+              ...ohlc,
+            });
+          }
+        };
 
-          setBankNifty({
-            name: "Bank Nifty",
-            price,
-            prevClose,
-            change: price - prevClose,
-            percentChange: ((price - prevClose) / prevClose) * 100,
-            ...ohlc,
-          });
-        }
-
-        if (nifty) {
-          const feed = nifty.fullFeed.indexFF;
-          const price = feed.ltpc.ltp;
-          const prevClose = feed.ltpc.cp;
-          const ohlc = feed.marketOHLC.ohlc.find(
-            (o: any) => o.interval === "1d"
-          );
-
-          setNifty50({
-            name: "Nifty 50",
-            price,
-            prevClose,
-            change: price - prevClose,
-            percentChange: ((price - prevClose) / prevClose) * 100,
-            ...ohlc,
-          });
-        }
+        processFeed("NSE_INDEX|Nifty 50", "Nifty 50", setNifty50);
+        processFeed("NSE_INDEX|Nifty Bank", "Bank Nifty", setBankNifty);
+        processFeed(
+          "NSE_INDEX|NIFTY MIDCAP 100",
+          "Nifty Midcap 100",
+          setMidcap100
+        );
+        processFeed("NSE_INDEX|Nifty 100", "Nifty 100", setNifty100);
+        processFeed("NSE_INDEX|Nifty IT", "Nifty IT", setNiftyIT);
       }
     });
 
     return () => {
-      socket.disconnect(); 
+      socket.disconnect();
     };
   }, []);
 
@@ -88,7 +84,6 @@ export default function LiveFeed() {
 
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden w-80">
-        {/* Header with name and indicator */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-800">{data.name}</h3>
           <div className="flex items-center">
@@ -97,7 +92,6 @@ export default function LiveFeed() {
           </div>
         </div>
 
-        {/* Price and change */}
         <div className="px-6 py-4">
           <div className="flex items-baseline mb-1">
             <div className="text-3xl font-bold">
@@ -116,7 +110,6 @@ export default function LiveFeed() {
             {data.percentChange.toFixed(2)}%
           </div>
 
-          {/* OHLC Grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Open</span>
@@ -157,7 +150,6 @@ export default function LiveFeed() {
           </div>
         </div>
 
-        {/* Footer with timestamp */}
         <div className="bg-gray-50 px-6 py-2 text-xs text-gray-500">
           Last updated: {new Date().toLocaleTimeString()}
         </div>
@@ -166,8 +158,8 @@ export default function LiveFeed() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6 font-sans">
-      <div className="max-w-5xl mx-auto">
+    <div className="bg-blue-50 min-h-screen p-6 font-sans">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-800">
             📊 Live Indices Feed
@@ -180,9 +172,12 @@ export default function LiveFeed() {
           )}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-8">
+        <div className="flex flex-wrap justify-center gap-8 bg-blue-50">
           {renderCard(nifty50)}
           {renderCard(bankNifty)}
+          {renderCard(midcap100)}
+          {renderCard(nifty100)}
+          {renderCard(niftyIT)}
         </div>
 
         <div className="text-center mt-8 text-sm text-gray-500">
