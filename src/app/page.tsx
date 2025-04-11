@@ -2,6 +2,9 @@ import MarketSentiment from "@/components/Marketsentiment";
 import Navbar from "@/components/common/Navbar";
 import StockTicker from "@/components/common/stockticker";
 import MarketSectors from "@/components/marketsectors";
+import Footer from "@/components/common/Footer";
+import StockNews from "@/components/stock-news";
+import Faq from "@/components/faq";
 export default function Home() {
   return (
     <section className="min-h-screen bg-primary">
@@ -9,6 +12,9 @@ export default function Home() {
       <Navbar />
       <MarketSentiment />
       <MarketSectors />
+      <StockNews/> 
+      <Faq />
+      <Footer />
     
       
     </section>
