@@ -4,7 +4,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 
 const stocks: StockData[] = [
   { 
-    symbol: "NIFTY BANK",
+    symbol: "NIFTYBANK",
     price: 46216.8,
     change: -0.58,
     changePercent: -0.58,

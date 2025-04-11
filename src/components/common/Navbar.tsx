@@ -19,7 +19,7 @@ const Navbar = () => {
     <nav className="bg-primary text-white px-6 py-3 flex items-center justify-between h-16 w-full">
       {/* Logo section */}
       <div className="flex items-center space-x-4">
-        <div className="text-2xl font-bold">Investory</div>
+        <div className="text-2xl font-bold">INVESTORY</div>
       </div>
       {/* Search bar */}
       <div className="flex-grow mx-8">
