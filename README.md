@@ -88,3 +88,12 @@
 | 5-6      | Stock trading system, mock data integration.     |
 | 7-9      | Rewards, achievements, leaderboard, levels 6-10. |
 | 10-12    | Final testing, admin dashboard, deployment.      |
+
+
+
+## todo
+- add chatbot
+- manage search history - set alerts
+- add to watchlist
+- top gainers/losers
+- 
