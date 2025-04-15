@@ -4,7 +4,9 @@ import chatbotIcon from "../../public/chatbot-icon.png";
 import { Input } from "./ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-// Define the type for a message
+import TypingDots from "./TypingDots";
+import parse from "html-react-parser";
+
 type Message = {
   role: "user" | "assistant";
   parts: { text: string }[];
@@ -36,6 +38,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
 
   const formatText = (text: string) => {
     const boldFormatted = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
@@ -69,6 +72,7 @@ const Chatbot = () => {
 
     try {
       // Step 2: Send updated messages to backend
+      setIsAssistantTyping(true);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/assistant`,
         {
@@ -92,6 +96,8 @@ const Chatbot = () => {
       setInputValue("");
     } catch (error) {
       console.error("Error sending message:", error);
+    } finally {
+      setIsAssistantTyping(false);
     }
   };
 
@@ -186,14 +192,24 @@ const Chatbot = () => {
                           ? "bg-blue-500 text-white rounded-br-none"
                           : "bg-white text-gray-800 rounded-bl-none"
                       }`}>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: formatText(msg.parts[0].text),
-                        }}
-                      />
+                      <div>{parse(msg.parts[0].text)}</div>
                     </div>
                   </motion.div>
                 ))}
+
+                {/* Show TypingDots when assistant is typing */}
+                {isAssistantTyping && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex justify-start">
+                    <div className="max-w-3/4 p-3 rounded-lg shadow-sm bg-white text-gray-800 rounded-bl-none">
+                      <TypingDots />
+                    </div>
+                  </motion.div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
             </div>
