@@ -5,6 +5,7 @@ import MarketSectors from "@/components/marketsectors";
 import Footer from "@/components/common/Footer";
 import StockNews from "@/components/stock-news";
 import Faq from "@/components/faq";
+import Chatbot from "@/components/Chatbot";
 export default function Home() {
   return (
     <section className="min-h-screen bg-primary">
@@ -15,6 +16,8 @@ export default function Home() {
       <StockNews/> 
       <Faq />
       <Footer />
+
+      <Chatbot/>
     
       
     </section>
