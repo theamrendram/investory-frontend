@@ -1,4 +1,5 @@
 "use client";
+import Chatbot from "@/components/Chatbot";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
@@ -11,10 +12,10 @@ export default function LiveFeed() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io("http://localhost:8000");
+    const socket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`);
 
     socket.on("connect", () => {
-      console.log("✅ Connected to backend"); 
+      console.log("✅ Connected to backend");
       setConnected(true);
     });
 
@@ -183,6 +184,9 @@ export default function LiveFeed() {
         <div className="text-center mt-8 text-sm text-gray-500">
           Note: Using simulated data updates for demonstration
         </div>
+      </div>
+      <div>
+        <Chatbot />
       </div>
     </div>
   );
