@@ -55,9 +55,9 @@ const MarketSectors = () => {
       }
     });
 
-    return () => {
-      server.disconnect();
-    };
+    // return () => {
+    //   server.disconnect();
+    // };
   }, []);
 
   const marketData = [nifty50, bankNifty, midcap100, nifty100, niftyIT].filter(

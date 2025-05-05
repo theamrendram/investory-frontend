@@ -5,6 +5,7 @@ interface NewsItem {
     source: string;
     date: string;
     category: string;
+    image: string;
   };
 
   
