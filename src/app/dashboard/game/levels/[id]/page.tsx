@@ -237,7 +237,7 @@ export default function LevelPage() {
   const completeLevel = () => {
     // In a real app, you would save progress to the backend here
     if (levelId < 5) {
-      router.push(`/dashboard/levels/${levelId + 1}`);
+      router.push(`/dashboard/game/levels/${levelId + 1}`);
     } else {
       router.push("/dashboard");
     }
@@ -255,7 +255,7 @@ export default function LevelPage() {
         <div className="flex items-center gap-2">
           {levelId > 1 && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/dashboard/levels/${levelId - 1}`}>
+              <Link href={`/dashboard/game/levels/${levelId - 1}`}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Previous Level
               </Link>
@@ -263,7 +263,7 @@ export default function LevelPage() {
           )}
           {levelId < 5 && !isCompleted && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/dashboard/levels/${levelId + 1}`}>
+              <Link href={`/dashboard/game/levels/${levelId + 1}`}>
                 Next Level
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

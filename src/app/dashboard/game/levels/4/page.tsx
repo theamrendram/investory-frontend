@@ -120,7 +120,7 @@ export default function Level4Page() {
 
   const completeLevel = () => {
     // In a real app, you would save progress to the backend here
-    router.push("/dashboard/levels/5");
+    router.push("/dashboard/game/levels/5");
   };
 
   const handleOrderSubmit = () => {
