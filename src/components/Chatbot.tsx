@@ -16,18 +16,24 @@ type Message = {
 const initialMessages: Message[] = [
   {
     role: "assistant",
-    parts: [{ text: "Hello, how can I help you?" }],
+    parts: [
+      {
+        text: "👋 Hi there! Welcome to Investory. How can I help you with stocks or investing today?",
+      },
+    ],
     read: true,
   },
   {
     role: "user",
-    parts: [{ text: "Hi! I'm looking for some assistance." }],
+    parts: [{ text: "Hi! I want to learn more about investing." }],
     read: true,
   },
   {
     role: "assistant",
     parts: [
-      { text: "Sure! I'm here to help. What do you need assistance with?" },
+      {
+        text: "Absolutely! Ask me anything about stocks, markets, or investing strategies.",
+      },
     ],
     read: true,
   },
@@ -36,9 +42,10 @@ const initialMessages: Message[] = [
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(""); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAssistantTyping, setIsAssistantTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const formatText = (text: string) => {
     const boldFormatted = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
@@ -53,119 +60,118 @@ const Chatbot = () => {
     setInputValue(e.target.value);
   };
 
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  if (!inputValue.trim()) return;
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+    setError(null);
 
-  const sessionToken = localStorage.getItem("chat_session");
-  const user_id = 101; // Replace with actual logged-in user ID if available
+    const sessionToken = localStorage.getItem("chat_session");
+    const user_id = 101; // Replace with actual logged-in user ID if available
     // Step 1: Add new user message to history
 
-  const newUserMessage: Message = {
-    role: "user",
-    parts: [{ text: inputValue }],
-  };
-
-  const updatedMessages = [...messages, newUserMessage];
-  setMessages(updatedMessages);
-  setInputValue("");
-  setIsAssistantTyping(true);
-
-  try {
-          // Step 2: Send updated messages to backend
-
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation`, // ✅ Endpoint from your router
-      {
-        user_id,
-        session_token: sessionToken,
-        messages: updatedMessages,
-        stock_context: null,      // you can populate this if stock-related info is extracted
-        memory_context: null      // optional for now
-      }
-    );
-
-    const aiText = response.data.ai_response;
-
-    const assistantMessage: Message = {
-      parts: [{ text: aiText }],
-      role: "assistant"
+    const newUserMessage: Message = {
+      role: "user",
+      parts: [{ text: inputValue }],
     };
+
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
+    setInputValue("");
+    setIsAssistantTyping(true);
+
+    try {
+      // Step 2: Send updated messages to backend
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation`, // ✅ Endpoint from your router
+        {
+          user_id,
+          session_token: sessionToken,
+          messages: updatedMessages,
+          stock_context: null, // you can populate this if stock-related info is extracted
+          memory_context: null, // optional for now
+        }
+      );
+
+      const aiText = response.data.ai_response;
+
+      const assistantMessage: Message = {
+        parts: [{ text: aiText }],
+        role: "assistant",
+      };
       // Step 3: Add assistant's reply to chat
 
-    const finalMessages = [...updatedMessages, assistantMessage];
-    setMessages(finalMessages);
-    localStorage.setItem("chatbotMessages", JSON.stringify(finalMessages));
-  } catch (error) {
-    console.error("Error sending message:", error);
-  } finally {
-    setIsAssistantTyping(false);
-  }
-};
-
-
-  
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
+      localStorage.setItem("chatbotMessages", JSON.stringify(finalMessages));
+    } catch (error) {
+      setError(
+        "Sorry, I couldn't process your request. Please try again in a moment."
+      );
+      console.error("Error sending message:", error);
+    } finally {
+      setIsAssistantTyping(false);
+    }
+  };
 
   // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-
   useEffect(() => {
-  const loadHistory = async () => {
-    const sessionToken = localStorage.getItem("chat_session");
+    const loadHistory = async () => {
+      const sessionToken = localStorage.getItem("chat_session");
 
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation/${sessionToken}`
-      );
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation/${sessionToken}`
+        );
 
-      const previous = res.data.map((msg: any) => {
-        if (msg.prompt && msg.prompt.trim() !== "") {
-          return { role: "user", parts: [{ text: msg.prompt }] };
-        } else if (msg.response && msg.response.trim() !== "") {
-          return { role: "assistant", parts: [{ text: msg.response }] };
-        }
-        return null;
-      }).filter(Boolean);
+        const previous = res.data
+          .map((msg: any) => {
+            if (msg.prompt && msg.prompt.trim() !== "") {
+              return { role: "user", parts: [{ text: msg.prompt }] };
+            } else if (msg.response && msg.response.trim() !== "") {
+              return { role: "assistant", parts: [{ text: msg.response }] };
+            }
+            return null;
+          })
+          .filter(Boolean);
 
-      setMessages(previous);
-    } catch (err) {
-      console.error("Error loading chat history:", err);
-    }
-  };
+        setMessages(previous);
+      } catch (err) {
+        console.error("Error loading chat history:", err);
+      }
+    };
 
-  loadHistory();
-}, []);
-
+    loadHistory();
+  }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 flex flex-col items-end z-50">
+    <div className="fixed bottom-6 right-6 flex flex-col items-end z-50">
       {/* Chatbot Icon */}
       <motion.div
         whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.95 }}
         onClick={toggleChatbot}
-        className="cursor-pointer">
+        className="cursor-pointer shadow-lg rounded-full border-2 border-blue-200 bg-white p-1 relative">
         <motion.img
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
           src={chatbotIcon.src}
           alt="Chatbot"
-          className="w-16 rounded-full shadow-2xl"
+          className="w-16 h-16 rounded-full shadow-xl border-2 border-blue-400"
         />
         {!isOpen && messages.some((m) => m.role === "assistant" && !m.read) && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white"
           />
         )}
       </motion.div>
-
       {/* Chatbot Window */}
       <AnimatePresence>
         {isOpen && (
@@ -174,43 +180,48 @@ const Chatbot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-80 md:w-96 h-[500px] bg-white shadow-2xl rounded-lg overflow-hidden mt-4 flex flex-col">
+            className="w-80 md:w-96 h-[520px] bg-white shadow-2xl rounded-2xl overflow-hidden mt-4 flex flex-col border border-blue-200">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-secondary p-4 text-white flex justify-between items-center">
-              <div className="flex items-center">
-                <motion.div
-                  animate={{
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: 2,
-                  }}
-                  className="w-8 h-8 bg-white rounded-full mr-2 flex items-center justify-center">
-                  <div className="w-5 h-5 bg-blue-600 rounded-full" />
-                </motion.div>
-                <h2 className="text-lg font-bold">Investory AI</h2>
+            <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-4 text-white flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      duration: 2,
+                    }}
+                    className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-200">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full" />
+                  </motion.div>
+                  <h2 className="text-lg font-bold tracking-wide">
+                    Investory AI
+                  </h2>
+                </div>
+                <button
+                  onClick={toggleChatbot}
+                  className="text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white rounded-full p-1"
+                  aria-label="Close chatbot">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={toggleChatbot}
-                className="text-white hover:text-gray-200">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+              <span className="text-xs text-blue-100 font-light pl-10">
+                Your AI Stock Assistant
+              </span>
             </div>
-
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 bg-blue-50">
               <div className="space-y-3">
                 {messages.map((msg, index) => (
                   <motion.div
@@ -222,16 +233,15 @@ const Chatbot = () => {
                       msg.role === "user" ? "justify-end" : "justify-start"
                     }`}>
                     <div
-                      className={`max-w-3/4 p-3 rounded-lg shadow-sm ${
+                      className={`max-w-[75%] p-3 rounded-2xl shadow-sm text-sm break-words ${
                         msg.role === "user"
-                          ? "bg-blue-500 text-white rounded-br-none"
-                          : "bg-white text-gray-800 rounded-bl-none"
+                          ? "bg-blue-500 text-white rounded-br-md"
+                          : "bg-white text-gray-800 rounded-bl-md border border-blue-100"
                       }`}>
                       <div>{parse(msg.parts[0].text)}</div>
                     </div>
                   </motion.div>
                 ))}
-
                 {/* Show TypingDots when assistant is typing */}
                 {isAssistantTyping && (
                   <motion.div
@@ -239,32 +249,37 @@ const Chatbot = () => {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
                     className="flex justify-start">
-                    <div className="max-w-3/4 p-3 rounded-lg shadow-sm bg-white text-gray-800 rounded-bl-none">
+                    <div className="max-w-[75%] p-3 rounded-2xl shadow-sm bg-white text-gray-800 rounded-bl-md border border-blue-100">
                       <TypingDots />
                     </div>
                   </motion.div>
                 )}
-
+                {error && (
+                  <div className="text-xs text-red-500 px-2 py-1 bg-red-50 rounded-md border border-red-200">
+                    {error}
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </div>
-
             {/* Input Area */}
             <form
               onSubmit={handleSubmit}
-              className="p-3 bg-white border-t border-gray-200 flex items-center">
+              className="p-3 bg-white border-t border-blue-100 flex items-center gap-2">
               <Input
                 value={inputValue}
                 onChange={handleInputChange}
                 type="text"
-                placeholder="Type your message..."
-                className="flex-1 rounded-full focus:ring-2 focus:ring-blue-500"
+                placeholder="Ask me anything about stocks or investing..."
+                className="flex-1 rounded-full focus:ring-2 focus:ring-blue-400 px-4 py-2 text-sm"
+                autoFocus
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 type="submit"
-                className="ml-2 bg-blue-600 text-white p-2 rounded-full flex items-center justify-center">
+                className="ml-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full flex items-center justify-center shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                aria-label="Send message">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
