@@ -275,7 +275,7 @@ export default function DashboardPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild className="w-full">
-                  <Link href={`/levels/${currentLevel}`}>
+                  <Link href={`/play/levels/${currentLevel}`}>
                     Continue Learning
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -353,7 +353,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Market Overview</CardTitle>
               <CardDescription>Today's market snapshot</CardDescription>
@@ -391,7 +391,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </TabsContent>
 
         {/* Portfolio Tab */}
@@ -757,7 +757,7 @@ export default function DashboardPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild className="w-full">
-                  <Link href={`/levels/${currentLevel}`}>
+                  <Link href={`/play/levels/${currentLevel}`}>
                     Continue Learning
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Link>

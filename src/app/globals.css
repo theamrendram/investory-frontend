@@ -8,144 +8,91 @@ body {
 
 @layer base {
   :root {
-    /* Light mode - using your color palette with rich black as primary */
-    --background: 0 0% 100%;
-    /* white */
-    --foreground: 222 36% 11%;
-    /* rich-black */
-    --card: 0 0% 100%;
-    /* white */
-    --card-foreground: 222 36% 11%;
-    /* rich-black */
-    --popover: 0 0% 100%;
-    /* white */
-    --popover-foreground: 222 36% 11%;
-    /* rich-black */
-    --primary: 222 36% 11%;
-    /* rich-black */
-    --primary-foreground: 0 0% 100%;
-    /* white */
-    --secondary: 13 88% 55%;
-    /* coquelicot */
-    --secondary-foreground: 0 0% 100%;
-    /* white */
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 222 36% 11%;
-    /* rich-black at lower opacity */
-    --accent: 13 88% 55%;
-    /* coquelicot */
-    --accent-foreground: 0 0% 100%;
-    /* white */
+    /* Light mode - Blue, Orange, White */
+    --background: 0 0% 100%; /* white */
+    --foreground: 221 61% 33%; /* blue */
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 221 61% 33%; /* blue */
+    --popover: 0 0% 100%; /* white */
+    --popover-foreground: 221 61% 33%; /* blue */
+    --primary: 221 61% 33%; /* blue */
+    --primary-foreground: 0 0% 100%; /* white */
+    --secondary: 24 96% 56%; /* orange */
+    --secondary-foreground: 0 0% 100%; /* white */
+    --muted: 0 0% 96.1%; /* light gray */
+    --muted-foreground: 221 61% 33%; /* blue at lower opacity */
+    --accent: 24 96% 56%; /* orange */
+    --accent-foreground: 0 0% 100%; /* white */
+    --accent-2: 42 95% 60%; /* gold/yellow for contrast */
+    --accent-2-foreground: 0 0% 100%; /* white */
+    --text-main: 221 61% 33%; /* blue for main text */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 222 36% 11%;
-    /* rich-black with low opacity */
-    --input: 222 36% 11%;
-    /* rich-black with low opacity */
-    --ring: 222 36% 11%;
-    /* rich-black */
+    --border: 221 61% 33%; /* blue with low opacity */
+    --input: 221 61% 33%; /* blue with low opacity */
+    --ring: 221 61% 33%; /* blue */
 
-    /* Chart colors - maintaining your existing palette with some adjustments */
-    --chart-1: 222 36% 11%;
-    /* rich-black */
-    --chart-2: 13 88% 55%;
-    /* coquelicot */
-    --chart-3: 0 0% 0%;
-    /* black */
-    --chart-4: 13 50% 65%;
-    /* lighter coquelicot */
-    --chart-5: 13 70% 45%;
-    /* darker coquelicot */
+    /* Chart colors - blue and orange palette */
+    --chart-1: 221 61% 33%; /* blue */
+    --chart-2: 24 96% 56%; /* orange */
+    --chart-3: 0 0% 0%; /* black */
+    --chart-4: 24 96% 76%; /* lighter orange */
+    --chart-5: 221 61% 53%; /* lighter blue */
 
     --radius: 0.5rem;
 
     /* Sidebar customization */
-    --sidebar-background: 0 0% 100%;
-    /* white */
-    --sidebar-foreground: 222 36% 11%;
-    /* rich-black */
-    --sidebar-primary: 222 36% 11%;
-    /* rich-black */
-    --sidebar-primary-foreground: 0 0% 100%;
-    /* white */
-    --sidebar-accent: 13 88% 55%;
-    /* coquelicot */
-    --sidebar-accent-foreground: 0 0% 100%;
-    /* white */
-    --sidebar-border: 222 36% 11%;
-    /* rich-black with low opacity */
-    --sidebar-ring: 222 36% 11%;
-    /* rich-black */
+    --sidebar-background: 0 0% 100%; /* white */
+    --sidebar-foreground: 221 61% 33%; /* blue */
+    --sidebar-primary: 221 61% 33%; /* blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* white */
+    --sidebar-accent: 24 96% 56%; /* orange */
+    --sidebar-accent-foreground: 0 0% 100%; /* white */
+    --sidebar-border: 221 61% 33%; /* blue with low opacity */
+    --sidebar-ring: 221 61% 33%; /* blue */
   }
 
   .dark {
-    /* Dark mode - using your color palette with rich black as primary */
-    --background: 222 36% 11%;
-    /* rich-black */
-    --foreground: 0 0% 100%;
-    /* white */
-    --card: 0 0% 0%;
-    /* black */
-    --card-foreground: 0 0% 100%;
-    /* white */
-    --popover: 0 0% 0%;
-    /* black */
-    --popover-foreground: 0 0% 100%;
-    /* white */
-    --primary: 222 36% 11%;
-    /* rich-black */
-    --primary-foreground: 0 0% 100%;
-    /* white */
-    --secondary: 13 88% 55%;
-    /* coquelicot */
-    --secondary-foreground: 0 0% 100%;
-    /* white */
-    --muted: 222 36% 20%;
-    /* lighter rich-black */
-    --muted-foreground: 0 0% 70%;
-    /* semi-transparent white */
-    --accent: 13 88% 45%;
-    /* darker coquelicot */
-    --accent-foreground: 0 0% 100%;
-    /* white */
+    /* Dark mode - Blue, Orange, White */
+    --background: 221 61% 33%; /* blue */
+    --foreground: 0 0% 100%; /* white */
+    --card: 221 61% 20%; /* darker blue */
+    --card-foreground: 0 0% 100%; /* white */
+    --popover: 221 61% 20%; /* darker blue */
+    --popover-foreground: 0 0% 100%; /* white */
+    --primary: 221 61% 33%; /* blue */
+    --primary-foreground: 0 0% 100%; /* white */
+    --secondary: 24 96% 56%; /* orange */
+    --secondary-foreground: 0 0% 100%; /* white */
+    --muted: 221 61% 20%; /* lighter blue */
+    --muted-foreground: 0 0% 70%; /* semi-transparent white */
+    --accent: 24 96% 46%; /* darker orange */
+    --accent-foreground: 0 0% 100%; /* white */
+    --accent-2: 42 95% 60%; /* gold/yellow for contrast */
+    --accent-2-foreground: 0 0% 100%; /* white */
+    --text-main: 0 0% 100%; /* white for main text in dark mode */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 222 36% 20%;
-    /* lighter rich-black */
-    --input: 222 36% 20%;
-    /* lighter rich-black */
-    --ring: 222 36% 11%;
-    /* rich-black */
+    --border: 221 61% 20%; /* lighter blue */
+    --input: 221 61% 20%; /* lighter blue */
+    --ring: 221 61% 33%; /* blue */
 
     /* Chart colors for dark mode */
-    --chart-1: 222 36% 11%;
-    /* rich-black */
-    --chart-2: 13 88% 55%;
-    /* coquelicot */
-    --chart-3: 0 0% 100%;
-    /* white */
-    --chart-4: 13 50% 35%;
-    /* darker coquelicot */
-    --chart-5: 13 70% 75%;
-    /* lighter coquelicot */
+    --chart-1: 221 61% 33%; /* blue */
+    --chart-2: 24 96% 56%; /* orange */
+    --chart-3: 0 0% 100%; /* white */
+    --chart-4: 24 96% 36%; /* darker orange */
+    --chart-5: 221 61% 53%; /* lighter blue */
 
     /* Sidebar dark mode */
-    --sidebar-background: 0 0% 0%;
-    /* black */
-    --sidebar-foreground: 0 0% 100%;
-    /* white */
-    --sidebar-primary: 222 36% 11%;
-    /* rich-black */
-    --sidebar-primary-foreground: 0 0% 100%;
-    /* white */
-    --sidebar-accent: 13 88% 55%;
-    /* coquelicot */
-    --sidebar-accent-foreground: 0 0% 100%;
-    /* white */
-    --sidebar-border: 222 36% 20%;
-    /* lighter rich-black */
-    --sidebar-ring: 222 36% 11%;
-    /* rich-black */
+    --sidebar-background: 221 61% 20%; /* darker blue */
+    --sidebar-foreground: 0 0% 100%; /* white */
+    --sidebar-primary: 221 61% 33%; /* blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* white */
+    --sidebar-accent: 24 96% 56%; /* orange */
+    --sidebar-accent-foreground: 0 0% 100%; /* white */
+    --sidebar-border: 221 61% 20%; /* lighter blue */
+    --sidebar-ring: 221 61% 33%; /* blue */
   }
 }
 

@@ -102,7 +102,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
       setUserLevel(nextLevel);
 
       // Navigate to the next level
-      router.push(`/dashboard/game/levels/${nextLevel}`);
+      router.push(`/play/levels/${nextLevel}`);
     } else {
       // Handle game completion
       router.push("/dashboard/completion");
@@ -112,7 +112,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
   // Helper function to render level items with proper locking
   const renderLevelItem = (level: any) => {
     const isLocked = level.id > userLevel;
-    const isActive = pathname === `/dashboard/game/levels/${level.id}`;
+    const isActive = pathname === `/play/levels/${level.id}`;
     const isCompleted = level.completed;
 
     // For locked levels
@@ -145,7 +145,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
     return (
       <Link
         key={level.id}
-        href={`/dashboard/game/levels/${level.id}`}
+        href={`/play/levels/${level.id}`}
         className={cn(
           "flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent",
           isActive && "bg-accent font-medium",
@@ -165,7 +165,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
   // Helper function to render sidebar menu items with locking
   const renderSidebarMenuItem = (level: any) => {
     const isLocked = level.id > userLevel;
-    const isActive = pathname === `/dashboard/game/levels/${level.id}`;
+    const isActive = pathname === `/play/levels/${level.id}`;
     const isCompleted = level.completed;
 
     // For locked levels
@@ -203,7 +203,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
           asChild
           isActive={isActive}
           className={cn("my-1", isCompleted && "text-green-600")}>
-          <Link href={`/dashboard/game/levels/${level.id}`}>
+          <Link href={`/play/levels/${level.id}`}>
             <BookOpen className="h-4 w-4" />
             <span>
               Level {level.id}: {level.name}
