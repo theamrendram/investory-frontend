@@ -53,58 +53,93 @@ const Chatbot = () => {
     setInputValue(e.target.value);
   };
 
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  e.preventDefault();
+  if (!inputValue.trim()) return;
 
+  const sessionToken = localStorage.getItem("chat_session");
+  const user_id = 101; // Replace with actual logged-in user ID if available
     // Step 1: Add new user message to history
-    const updatedMessages: Message[] = [
-      ...messages,
-      {
-        role: "user",
-        parts: [{ text: inputValue }],
-      },
-    ];
 
-    // Save in localStorage
-    localStorage.setItem("chatbotMessages", JSON.stringify(updatedMessages));
-    setMessages(updatedMessages); // Optimistically update UI
-
-    try {
-      // Step 2: Send updated messages to backend
-      setIsAssistantTyping(true);
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/assistant`,
-        {
-          messages: updatedMessages,
-        }
-      );
-
-      console.log("Response from server:", response.data);
-
-      // Step 3: Add assistant's reply to chat
-      const finalMessages: Message[] = [
-        ...updatedMessages,
-        {
-          role: "assistant",
-          parts: [{ text: response.data.ai_response }],
-        },
-      ];
-
-      setMessages(finalMessages);
-      localStorage.setItem("chatbotMessages", JSON.stringify(finalMessages));
-      setInputValue("");
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsAssistantTyping(false);
-    }
+  const newUserMessage: Message = {
+    role: "user",
+    parts: [{ text: inputValue }],
   };
+
+  const updatedMessages = [...messages, newUserMessage];
+  setMessages(updatedMessages);
+  setInputValue("");
+  setIsAssistantTyping(true);
+
+  try {
+          // Step 2: Send updated messages to backend
+
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation`, // ✅ Endpoint from your router
+      {
+        user_id,
+        session_token: sessionToken,
+        messages: updatedMessages,
+        stock_context: null,      // you can populate this if stock-related info is extracted
+        memory_context: null      // optional for now
+      }
+    );
+
+    const aiText = response.data.ai_response;
+
+    const assistantMessage: Message = {
+      parts: [{ text: aiText }],
+      role: "assistant"
+    };
+      // Step 3: Add assistant's reply to chat
+
+    const finalMessages = [...updatedMessages, assistantMessage];
+    setMessages(finalMessages);
+    localStorage.setItem("chatbotMessages", JSON.stringify(finalMessages));
+  } catch (error) {
+    console.error("Error sending message:", error);
+  } finally {
+    setIsAssistantTyping(false);
+  }
+};
+
+
+  
 
   // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+
+  useEffect(() => {
+  const loadHistory = async () => {
+    const sessionToken = localStorage.getItem("chat_session");
+
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation/${sessionToken}`
+      );
+
+      const previous = res.data.map((msg: any) => {
+        if (msg.prompt && msg.prompt.trim() !== "") {
+          return { role: "user", parts: [{ text: msg.prompt }] };
+        } else if (msg.response && msg.response.trim() !== "") {
+          return { role: "assistant", parts: [{ text: msg.response }] };
+        }
+        return null;
+      }).filter(Boolean);
+
+      setMessages(previous);
+    } catch (err) {
+      console.error("Error loading chat history:", err);
+    }
+  };
+
+  loadHistory();
+}, []);
+
 
   return (
     <div className="fixed bottom-4 right-4 flex flex-col items-end z-50">
