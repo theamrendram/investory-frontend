@@ -89,7 +89,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
   ];
 
   // Function to complete current level and proceed to next
-  const completeLevel = (levelId:any) => {
+  const completeLevel = (levelId: any) => {
     const nextLevel = levelId + 1;
     if (nextLevel <= 5) {
       // Update user level in store
@@ -102,7 +102,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
       setUserLevel(nextLevel);
 
       // Navigate to the next level
-      router.push(`/dashboard/levels/${nextLevel}`);
+      router.push(`/dashboard/game/levels/${nextLevel}`);
     } else {
       // Handle game completion
       router.push("/dashboard/completion");
@@ -110,9 +110,9 @@ export default function GameLayout({ children }: GameLayoutProps) {
   };
 
   // Helper function to render level items with proper locking
-  const renderLevelItem = (level:any) => {
+  const renderLevelItem = (level: any) => {
     const isLocked = level.id > userLevel;
-    const isActive = pathname === `/dashboard/levels/${level.id}`;
+    const isActive = pathname === `/dashboard/game/levels/${level.id}`;
     const isCompleted = level.completed;
 
     // For locked levels
@@ -145,7 +145,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
     return (
       <Link
         key={level.id}
-        href={`/dashboard/levels/${level.id}`}
+        href={`/dashboard/game/levels/${level.id}`}
         className={cn(
           "flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent",
           isActive && "bg-accent font-medium",
@@ -163,9 +163,9 @@ export default function GameLayout({ children }: GameLayoutProps) {
   };
 
   // Helper function to render sidebar menu items with locking
-  const renderSidebarMenuItem = (level:any) => {
+  const renderSidebarMenuItem = (level: any) => {
     const isLocked = level.id > userLevel;
-    const isActive = pathname === `/dashboard/levels/${level.id}`;
+    const isActive = pathname === `/dashboard/game/levels/${level.id}`;
     const isCompleted = level.completed;
 
     // For locked levels
@@ -203,7 +203,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
           asChild
           isActive={isActive}
           className={cn("my-1", isCompleted && "text-green-600")}>
-          <Link href={`/dashboard/levels/${level.id}`}>
+          <Link href={`/dashboard/game/levels/${level.id}`}>
             <BookOpen className="h-4 w-4" />
             <span>
               Level {level.id}: {level.name}
