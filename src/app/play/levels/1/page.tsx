@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, CheckCircle2, CircleHelp, Lightbulb } from "lucide-react";
 import Image from "next/image";
@@ -21,8 +21,9 @@ import RewardCard from "@/components/reward-card";
 import HelpCard from "@/components/help-card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import nse_logo from "@/public/nse.png";
 import { usePathname } from "next/navigation";
+import axios from "axios";
+import { useUserStore } from "@/store/user-store";
 
 const levelData = {
   id: 1,
@@ -70,13 +71,16 @@ export default function Level1Page() {
   const router = useRouter();
   const pathname = usePathname();
   const levelPath = pathname.split("/").pop();
-  console.log("Level Path:", levelPath);
   const [activeTab, setActiveTab] = useState("story");
   const [tasks, setTasks] = useState(levelData.tasks);
   const [isCompleted, setIsCompleted] = useState(false);
   const [companyAnswers, setCompanyAnswers] = useState<Record<string, string>>(
     {}
   );
+  const [hasCompleted, setHasCompleted] = useState(false);
+  const hasCalledComplete = useRef(false);
+
+  const user = useUserStore((state) => state.user);
 
   const completedTasks = tasks.filter((task) => task.completed).length;
   const progress = (completedTasks / tasks.length) * 100;
@@ -100,13 +104,29 @@ export default function Level1Page() {
     }
   };
 
-  const completeLevel = () => {
-    // In a real app, you would save progress to the backend here
-    if(!isCompleted) {
+  const completeLevel = async () => {
+    if (!isCompleted) {
       alert("Please complete all tasks before proceeding.");
       return;
     }
-    router.push("./2");
+
+    try {
+      const response = await axios.put(
+        `/api/progress/level?level=${Number(levelPath) + 1}&token=${
+          user?.idToken
+        }`
+      );
+      if (response.status === 200) {
+        if (Number(levelPath) < 5) router.push(`./${Number(levelPath) + 1}`);
+        else router.push("/play");
+      } else {
+        alert("Error completing level");
+      }
+    } catch (error) {
+      console.log("error", error);
+      alert("Error completing level");
+      return;
+    }
   };
 
   const handleCompanyTypeChange = (company: string, value: string) => {
@@ -130,6 +150,16 @@ export default function Level1Page() {
       );
     }
   };
+
+  useEffect(() => {
+    if (isCompleted && !hasCalledComplete.current) {
+      hasCalledComplete.current = true;
+      completeLevel();
+    }
+    if (!isCompleted) {
+      hasCalledComplete.current = false;
+    }
+  }, [isCompleted]);
 
   return (
     <GameLayout>

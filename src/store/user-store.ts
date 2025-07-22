@@ -8,6 +8,7 @@ interface User {
   avatar: string | null;
   amount: number | null;
   level: number | null;
+  idToken: string | null;
 }
 
 interface UserStore {

@@ -1,16 +1,20 @@
 import { NextResponse, NextRequest } from "next/server";
 import axios from "axios";
 
-
-export async function GET(request: NextRequest) {
-  // const { level } = await request.json();
+export async function PUT(request: NextRequest) {
+  const url = new URL(request.url);
+  const level = url.searchParams.get("level");
+  const token = url.searchParams.get("token");
 
   try {
-    const response = await axios.post(
+    const response = await axios.put(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/progress/level`,
+      { level: level },
       {
-        level: 1,
-      },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     console.log(response.data);
     return NextResponse.json(response.data);

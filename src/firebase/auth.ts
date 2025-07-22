@@ -8,6 +8,7 @@ import {
 } from "firebase/auth";
 import { useUserStore } from "@/store/user-store";
 import axios from "axios";
+import getIdToken from "@/firebase/getIdToken";
 const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
@@ -35,6 +36,7 @@ const signInWithGoogle = async () => {
         avatar: user.photoURL,
         amount: Math.round(getUser.data.amount),
         level: getUser.data.currentLevel,
+        idToken: await getIdToken(),
       };
       const setUser = useUserStore.getState().setUser;
       console.log("user data", userData);
