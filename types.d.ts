@@ -1,4 +1,5 @@
 interface NewsItem {
+    image: any;
     title: string;
     description: string;
     link: string;
