@@ -9,7 +9,7 @@ import Chatbot from "@/components/Chatbot";
 export default function Home() {
   return (
     <section className="min-h-screen bg-primary">
-      <StockTicker pauseonhover={true}></StockTicker>
+      {/* <StockTicker pauseonhover={true}></StockTicker> */}
       <Navbar />
       <MarketSentiment />
       {/* <MarketSectors /> */}
