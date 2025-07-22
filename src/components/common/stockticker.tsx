@@ -48,21 +48,26 @@ export default function StockTicker({
   const [stockList, setStockList] = useState<StockData[]>([]);
 
   const [duplicatedStocks, setduplicateStocks] = useState<StockData[]>([]);
+  const socketRef = useRef<any>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
+    if (socketRef.current) {
+      console.warn("Socket already exists! Preventing duplicate connection.");
+      return;
+    }
     const server = io(process.env.NEXT_PUBLIC_BACKEND_URL);
-    server.on("connect" , () => {
+    socketRef.current = server;
+    server.on("connect", () => {
       console.log("Connected to backend");
     });
-    server.on("disconnect" , () => {
+    server.on("disconnect", () => {
       console.log("Disconnected from backend");
     });
-  
-    server.on("marketData" ,(msg) => {
+    server.on("marketData", (msg) => {
       if (msg.type === "live_feed" && msg.feeds) {
         const stocksArray: StockData[] = [];
         Object.keys(msg.feeds).forEach((key) => {
-          const symbol = key.split("|")[1]; 
+          const symbol = key.split("|")[1];
           const data = msg.feeds[key];
           if (data) {
             const feed = data.fullFeed.indexFF;
@@ -81,13 +86,13 @@ export default function StockTicker({
         setStockList(stocksArray);
       }
     });
-  
-  
     return () => {
-      server.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
-  }
-  , []);
+  }, []);
   
   useEffect(() => {
     if (stockList.length > 0) {

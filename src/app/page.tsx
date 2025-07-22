@@ -12,7 +12,7 @@ export default function Home() {
       {/* <StockTicker pauseonhover={true}></StockTicker> */}
       <Navbar />
       <MarketSentiment />
-      {/* <MarketSectors /> */}
+      <MarketSectors />
       <StockNews/> 
       <Faq />
       <Footer />
