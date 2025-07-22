@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import TypingDots from "./TypingDots";
 import parse from "html-react-parser";
+import { useUserStore } from "@/store/user-store";
 
 type Message = {
   role: "user" | "assistant";
   parts: { text: string }[];
   read?: boolean;
 };
+// Ensure a chat session token exists in localStorage
 
 const initialMessages: Message[] = [
   {
@@ -42,19 +44,25 @@ const initialMessages: Message[] = [
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [inputValue, setInputValue] = useState(""); 
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAssistantTyping, setIsAssistantTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const formatText = (text: string) => {
-    const boldFormatted = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    return boldFormatted;
-  };
-
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const user = useUserStore((state) => state.user);
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
   };
+  useEffect(() => {
+    const sessionToken = localStorage.getItem("chat_session");
+    if (!sessionToken) {
+      const newToken = Math.random().toString(36).substr(2, 16) + Date.now();
+      localStorage.setItem("chat_session", newToken);
+      setSessionToken(newToken);
+    } else {
+      setSessionToken(sessionToken);
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -64,10 +72,6 @@ const Chatbot = () => {
     e.preventDefault();
     if (!inputValue.trim()) return;
     setError(null);
-
-    const sessionToken = localStorage.getItem("chat_session");
-    const user_id = 101; // Replace with actual logged-in user ID if available
-    // Step 1: Add new user message to history
 
     const newUserMessage: Message = {
       role: "user",
@@ -80,16 +84,14 @@ const Chatbot = () => {
     setIsAssistantTyping(true);
 
     try {
-      // Step 2: Send updated messages to backend
-
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation`, // ✅ Endpoint from your router
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation`,
         {
-          user_id,
+          user_id: user?.uid || 101,
           session_token: sessionToken,
           messages: updatedMessages,
-          stock_context: null, // you can populate this if stock-related info is extracted
-          memory_context: null, // optional for now
+          stock_context: null,
+          memory_context: null,
         }
       );
 
@@ -99,7 +101,6 @@ const Chatbot = () => {
         parts: [{ text: aiText }],
         role: "assistant",
       };
-      // Step 3: Add assistant's reply to chat
 
       const finalMessages = [...updatedMessages, assistantMessage];
       setMessages(finalMessages);
@@ -114,7 +115,6 @@ const Chatbot = () => {
     }
   };
 
-  // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

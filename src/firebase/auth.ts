@@ -20,7 +20,7 @@ const signInWithGoogle = async () => {
     const getUser = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users`,
       {
-        firebase_id: user.uid,
+        firebase_uid: user.uid,
         name: user.displayName,
         email: user.email,
       }

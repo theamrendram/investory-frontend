@@ -43,7 +43,7 @@ const Navbar = () => {
             variant={"outline"}
             className="bg-slate-600 hover:bg-slate-500"
             onClick={() => {
-              window.location.href = "/dashboard";
+              window.location.href = "/play";
             }}>
             Go to Dashboard
           </Button>

@@ -19,9 +19,9 @@ export async function PUT(request: NextRequest) {
     console.log(response.data);
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error when completing level:", error);
     return NextResponse.json(
-      { error: "An error occurred while processing the request." },
+      { error: "An error occurred while processing the level." },
       { status: 500 }
     );
   }
