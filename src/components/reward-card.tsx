@@ -26,8 +26,12 @@ export default function RewardCard({
   const [showModal, setShowModal] = useState(false);
 
   const handleClaim = () => {
-    onClaim();
     setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    onClaim();
+    setShowModal(false);
   };
 
   return (
@@ -64,7 +68,7 @@ export default function RewardCard({
         </CardFooter>
       </Card>
 
-      <RewardClaimModal show={showModal} onClose={() => setShowModal(false)} />
+      <RewardClaimModal show={showModal} onClose={() => handleCloseModal()} />
     </>
   );
 }
