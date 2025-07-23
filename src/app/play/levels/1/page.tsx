@@ -22,8 +22,9 @@ import HelpCard from "@/components/help-card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { usePathname } from "next/navigation";
-import axios from "axios";
+import axiosInstance from "@/lib/axios-instance";
 import { useUserStore } from "@/store/user-store";
+import level1Questions from "@/data/questions/level.1";
 
 const levelData = {
   id: 1,
@@ -67,6 +68,161 @@ const companies = [
   { name: "Byjus", type: "private" },
 ];
 
+type QuizQuestion = {
+  id: number;
+  question: string;
+  options: string[];
+  answer: number;
+};
+
+const quizQuestions: QuizQuestion[] = [
+  {
+    id: 1,
+    question: "What does owning a stock represent?",
+    options: [
+      "A loan to a company",
+      "Ownership in a company",
+      "A type of bond",
+      "A government security",
+    ],
+    answer: 1,
+  },
+  {
+    id: 2,
+    question: "Which of the following is a public company?",
+    options: [
+      "Ola Cabs",
+      "Byjus",
+      "Reliance Industries",
+      "Your local grocery store",
+    ],
+    answer: 2,
+  },
+  {
+    id: 3,
+    question:
+      "What is the main difference between a private and a public company?",
+    options: [
+      "Public companies are owned by the government",
+      "Private companies have more employees",
+      "Public companies are listed on a stock exchange",
+      "Private companies are always startups",
+    ],
+    answer: 2,
+  },
+  {
+    id: 4,
+    question: "What are the full forms of NSE and BSE?",
+    options: [
+      "National Stock Exchange & Bombay Stock Exchange",
+      "New Stock Exchange & Bharat Stock Exchange",
+      "National Securities Exchange & Bombay Securities Exchange",
+      "None of the above",
+    ],
+    answer: 0,
+  },
+  {
+    id: 5,
+    question: "Which city is known as the heart of India’s financial world?",
+    options: ["Delhi", "Bangalore", "Mumbai", "Chennai"],
+    answer: 2,
+  },
+  {
+    id: 6,
+    question: "Why do companies go public?",
+    options: [
+      "To raise money from the public",
+      "To avoid paying taxes",
+      "To become a government company",
+      "To reduce their workforce",
+    ],
+    answer: 0,
+  },
+  {
+    id: 7,
+    question: "What is the role of a stock exchange?",
+    options: [
+      "To provide a marketplace for buying and selling stocks",
+      "To lend money to companies",
+      "To set company salaries",
+      "To manage government bonds",
+    ],
+    answer: 0,
+  },
+];
+
+function getQuizScore(
+  quizAnswers: Record<number, number>,
+  quizQuestions: QuizQuestion[]
+) {
+  let score = 0;
+  for (const q of quizQuestions) {
+    if (quizAnswers[q.id] === q.answer) score++;
+  }
+  return score;
+}
+
+function QuestionsSection() {
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [showScore, setShowScore] = useState(false);
+  const score = level1Questions.reduce(
+    (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
+    0
+  );
+
+  const handleAnswer = (qid: number, idx: number) =>
+    setAnswers((prev) => ({ ...prev, [qid]: idx }));
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Quiz</CardTitle>
+        <CardDescription>Test your knowledge for this level</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {level1Questions.map((q) => (
+          <div key={q.id} className="mb-6">
+            <p className="font-medium mb-2">{q.question}</p>
+            <div className="space-y-2">
+              {q.options.map((opt, idx) => (
+                <label
+                  key={idx}
+                  className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`q${q.id}`}
+                    value={idx}
+                    checked={answers[q.id] === idx}
+                    onChange={() => handleAnswer(q.id, idx)}
+                    disabled={showScore}
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+        {!showScore && (
+          <button
+            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            disabled={Object.keys(answers).length !== level1Questions.length}
+            onClick={() => setShowScore(true)}>
+            Submit Quiz
+          </button>
+        )}
+        {showScore && (
+          <div className="mt-4 p-4 rounded bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200">
+            <p className="font-semibold">Quiz Complete!</p>
+            <p>
+              You scored {score} out of {level1Questions.length}.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Level1Page() {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,6 +235,7 @@ export default function Level1Page() {
   );
   const [hasCompleted, setHasCompleted] = useState(false);
   const hasCalledComplete = useRef(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
 
   const user = useUserStore((state) => state.user);
 
@@ -111,10 +268,8 @@ export default function Level1Page() {
     }
 
     try {
-      const response = await axios.put(
-        `/api/progress/level?level=${Number(levelPath) + 1}&token=${
-          user?.idToken
-        }`
+      const response = await axiosInstance.put(
+        `/api/progress/level?level=${Number(levelPath) + 1}`
       );
       if (response.status === 200) {
         if (Number(levelPath) < 5) router.push(`./${Number(levelPath) + 1}`);
@@ -149,6 +304,21 @@ export default function Level1Page() {
         )
       );
     }
+  };
+
+  const handleQuizAnswer = (questionId: number, optionIdx: number) => {
+    setQuizAnswers((prev) => {
+      const updated = { ...prev, [questionId]: optionIdx };
+      // If all questions are answered, mark the task as complete
+      if (Object.keys(updated).length === quizQuestions.length) {
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === 3 ? { ...task, completed: true } : task
+          )
+        );
+      }
+      return updated;
+    });
   };
 
   useEffect(() => {
@@ -366,61 +536,101 @@ export default function Level1Page() {
                         </span>
                       </div>
                       {!tasks[2].completed && (
-                        <div className="ml-7 mt-2">
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div className="rounded-lg border p-3">
-                              <div className="mb-2 aspect-video w-full overflow-hidden rounded-lg bg-muted">
-                                <div className="flex h-full items-center justify-center">
-                                  <Image
-                                    src={"/nse.png"}
-                                    width={100}
-                                    height={100}
-                                    alt="National Stock Exchange"
-                                    className="w-full h-ful"
-                                  />
-                                </div>
-                              </div>
-                              <RadioGroup>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="nse" id="nse-1" />
-                                  <Label htmlFor="nse-1">
-                                    National Stock Exchange
-                                  </Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="bse" id="bse-1" />
-                                  <Label htmlFor="bse-1">
-                                    Bombay Stock Exchange
-                                  </Label>
-                                </div>
+                        <div className="ml-7 mt-2 space-y-6">
+                          {quizQuestions.map((q) => (
+                            <div key={q.id} className="rounded-lg border p-3">
+                              <p className="mb-2 font-medium">{q.question}</p>
+                              <RadioGroup
+                                value={quizAnswers[q.id]?.toString()}
+                                onValueChange={(val) =>
+                                  handleQuizAnswer(q.id, Number(val))
+                                }>
+                                {q.options.map((opt, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center space-x-2">
+                                    <RadioGroupItem
+                                      value={idx.toString()}
+                                      id={`q${q.id}-opt${idx}`}
+                                    />
+                                    <Label htmlFor={`q${q.id}-opt${idx}`}>
+                                      {opt}
+                                    </Label>
+                                  </div>
+                                ))}
                               </RadioGroup>
                             </div>
-                            <div className="rounded-lg border p-3">
-                              <div className="mb-2 aspect-video w-full overflow-hidden rounded-lg bg-muted">
-                                <div className="flex h-full items-center justify-center">
-                                  <Image
-                                    src={"/bse.webp"}
-                                    width={100}
-                                    height={100}
-                                    alt="National Stock Exchange"
-                                    className="w-full h-full"
-                                  />
+                          ))}
+                          {tasks[2].completed && (
+                            <div className="rounded-lg border p-3 bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200 mt-4">
+                              <p className="font-semibold">Quiz Complete!</p>
+                              <p>
+                                You scored{" "}
+                                {getQuizScore(quizAnswers, quizQuestions)} out
+                                of {quizQuestions.length}.
+                              </p>
+                            </div>
+                          )}
+                          {/* Existing logo matching quiz (optional, can be kept as bonus) */}
+                          <div className="rounded-lg border p-3">
+                            <p className="mb-2 font-medium">
+                              Match the stock exchange logos with their names:
+                            </p>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="rounded-lg border p-3">
+                                <div className="mb-2 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                                  <div className="flex h-full items-center justify-center">
+                                    <Image
+                                      src={"/nse.png"}
+                                      width={100}
+                                      height={100}
+                                      alt="National Stock Exchange"
+                                      className="w-full h-ful"
+                                    />
+                                  </div>
                                 </div>
+                                <RadioGroup>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="nse" id="nse-1" />
+                                    <Label htmlFor="nse-1">
+                                      National Stock Exchange
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="bse" id="bse-1" />
+                                    <Label htmlFor="bse-1">
+                                      Bombay Stock Exchange
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
                               </div>
-                              <RadioGroup>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="nse" id="nse-2" />
-                                  <Label htmlFor="nse-2">
-                                    National Stock Exchange
-                                  </Label>
+                              <div className="rounded-lg border p-3">
+                                <div className="mb-2 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                                  <div className="flex h-full items-center justify-center">
+                                    <Image
+                                      src={"/bse.webp"}
+                                      width={100}
+                                      height={100}
+                                      alt="Bombay Stock Exchange"
+                                      className="w-full h-full"
+                                    />
+                                  </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="bse" id="bse-2" />
-                                  <Label htmlFor="bse-2">
-                                    Bombay Stock Exchange
-                                  </Label>
-                                </div>
-                              </RadioGroup>
+                                <RadioGroup>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="nse" id="nse-2" />
+                                    <Label htmlFor="nse-2">
+                                      National Stock Exchange
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="bse" id="bse-2" />
+                                    <Label htmlFor="bse-2">
+                                      Bombay Stock Exchange
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -460,6 +670,7 @@ export default function Level1Page() {
           />
         </div>
       </div>
+      <QuestionsSection />
     </GameLayout>
   );
 }

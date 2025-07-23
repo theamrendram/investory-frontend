@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import GameLayout from "@/components/game-layout";
+import { useEffect } from "react";
 
 const levelData = [
   {
@@ -201,6 +202,86 @@ const levelData = [
     },
   },
 ];
+
+const questionImports: Record<number, () => Promise<any>> = {
+  1: () => import("@/data/questions/level.1"),
+  2: () => import("@/data/questions/level.2"),
+  3: () => import("@/data/questions/level.3"),
+  4: () => import("@/data/questions/level.4"),
+  5: () => import("@/data/questions/level.5"),
+};
+
+function QuestionsSection({ levelId }: { levelId: number }) {
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [showScore, setShowScore] = useState(false);
+
+  useEffect(() => {
+    if (questionImports[levelId]) {
+      questionImports[levelId]().then((mod) => setQuestions(mod.default || []));
+    }
+  }, [levelId]);
+
+  const handleAnswer = (qid: number, idx: number) => {
+    setAnswers((prev) => ({ ...prev, [qid]: idx }));
+  };
+
+  const score = questions.reduce(
+    (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
+    0
+  );
+
+  if (!questions.length) return null;
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Quiz</CardTitle>
+        <CardDescription>Test your knowledge for this level</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {questions.map((q) => (
+          <div key={q.id} className="mb-6">
+            <p className="font-medium mb-2">{q.question}</p>
+            <div className="space-y-2">
+              {q.options.map((opt: string, idx: number) => (
+                <label
+                  key={idx}
+                  className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`q${q.id}`}
+                    value={idx}
+                    checked={answers[q.id] === idx}
+                    onChange={() => handleAnswer(q.id, idx)}
+                    disabled={showScore}
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+        {!showScore && (
+          <Button
+            className="mt-4"
+            disabled={Object.keys(answers).length !== questions.length}
+            onClick={() => setShowScore(true)}>
+            Submit Quiz
+          </Button>
+        )}
+        {showScore && (
+          <div className="mt-4 p-4 rounded bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200">
+            <p className="font-semibold">Quiz Complete!</p>
+            <p>
+              You scored {score} out of {questions.length}.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function LevelPage() {
   const params = useParams();
@@ -472,6 +553,7 @@ export default function LevelPage() {
           </Card>
         </div>
       </div>
+      <QuestionsSection levelId={levelId} />
     </GameLayout>
   );
 }

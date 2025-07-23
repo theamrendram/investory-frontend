@@ -29,6 +29,63 @@ import GameLayout from "@/components/game-layout";
 import LevelHeader from "@/components/level-header";
 import RewardCard from "@/components/reward-card";
 import HelpCard from "@/components/help-card";
+import level3Questions from '@/data/questions/level.3';
+
+function QuestionsSection() {
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [showScore, setShowScore] = useState(false);
+  const score = level3Questions.reduce((acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc), 0);
+
+  const handleAnswer = (qid: number, idx: number) => setAnswers((prev) => ({ ...prev, [qid]: idx }));
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Quiz</CardTitle>
+        <CardDescription>Test your knowledge for this level</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {level3Questions.map((q) => (
+          <div key={q.id} className="mb-6">
+            <p className="font-medium mb-2">{q.question}</p>
+            <div className="space-y-2">
+              {q.options.map((opt, idx) => (
+                <label key={idx} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`q${q.id}`}
+                    value={idx}
+                    checked={answers[q.id] === idx}
+                    onChange={() => handleAnswer(q.id, idx)}
+                    disabled={showScore}
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+        {!showScore && (
+          <button
+            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            disabled={Object.keys(answers).length !== level3Questions.length}
+            onClick={() => setShowScore(true)}
+          >
+            Submit Quiz
+          </button>
+        )}
+        {showScore && (
+          <div className="mt-4 p-4 rounded bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200">
+            <p className="font-semibold">Quiz Complete!</p>
+            <p>
+              You scored {score} out of {level3Questions.length}.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 const levelData = {
   id: 3,
@@ -488,6 +545,7 @@ export default function Level3Page() {
           />
         </div>
       </div>
+      <QuestionsSection />
     </GameLayout>
   );
 }
