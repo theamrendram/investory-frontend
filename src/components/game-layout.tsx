@@ -105,7 +105,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
       router.push(`/play/levels/${nextLevel}`);
     } else {
       // Handle game completion
-      router.push("/dashboard/completion");
+      router.push("/play/completion");
     }
   };
 
@@ -299,9 +299,9 @@ export default function GameLayout({ children }: GameLayoutProps) {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <Link
-                      href="/dashboard"
+                      href="/play"
                       className={`${
-                        pathname === "/dashboard" ? "bg-accent text-white" : ""
+                        pathname === "/play" ? "bg-accent text-white" : ""
                       }`}>
                       <LayoutDashboard className="h-4 w-4" />
                       <span>Dashboard</span>
@@ -374,20 +374,6 @@ export default function GameLayout({ children }: GameLayoutProps) {
         <div className="flex-1 pt-14 lg:pt-0 bg-blue-50">
           <main className="container mx-auto p-4 lg:p-6">
             {children}
-
-            {/* Level completion button - can be conditionally rendered when level is completed */}
-            {/* {pathname.includes("/levels/") &&
-              currentLevel === userLevel &&
-              currentLevel < 5 && (
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    size="lg"
-                    onClick={() => completeLevel(currentLevel)}
-                    className="bg-green-600 hover:bg-green-700">
-                    Complete Level {currentLevel} & Unlock Next
-                  </Button>
-                </div>
-              )} */}
           </main>
         </div>
       </div>
