@@ -95,7 +95,7 @@ const Chatbot = () => {
         }
       );
 
-      const aiText = response.data.ai_response;
+      const aiText = response.data.data;
 
       const assistantMessage: Message = {
         parts: [{ text: aiText }],
@@ -127,8 +127,7 @@ const Chatbot = () => {
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/conversation/${sessionToken}`
         );
-
-        const previous = res.data
+        const previous = res.data.data
           .map((msg: any) => {
             if (msg.prompt && msg.prompt.trim() !== "") {
               return { role: "user", parts: [{ text: msg.prompt }] };
