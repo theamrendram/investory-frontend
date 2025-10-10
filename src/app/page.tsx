@@ -16,7 +16,7 @@ export default function Home() {
       <StockNews/> 
       <Faq />
       <Footer />
-      <Chatbot/>
+      <Chatbot/>  
     </section>
   );
 }
