@@ -7,6 +7,8 @@ import axios from "axios";
 import TypingDots from "./TypingDots";
 import parse from "html-react-parser";
 import { useUserStore } from "@/store/user-store";
+import ReactMarkdown from "react-markdown";
+
 
 type Message = {
   role: "user" | "assistant";
@@ -95,7 +97,7 @@ const Chatbot = () => {
         }
       );
 
-      const aiText = response.data.data;
+      const aiText = response.data.data?.trim() || "";
 
       const assistantMessage: Message = {
         parts: [{ text: aiText }],
@@ -237,7 +239,7 @@ const Chatbot = () => {
                           ? "bg-blue-500 text-white rounded-br-md"
                           : "bg-white text-gray-800 rounded-bl-md border border-blue-100"
                       }`}>
-                      <div>{parse(msg.parts[0].text)}</div>
+                      <ReactMarkdown>{msg.parts[0].text}</ReactMarkdown>
                     </div>
                   </motion.div>
                 ))}
