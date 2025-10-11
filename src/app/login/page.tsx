@@ -1,7 +1,14 @@
-import Login from "@/components/common/Login";
+"use client";
 
-const LoginPage = () => {
-  return <Login />;
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default LoginPage;
+export default function LoginPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/auth/login");
+  }, [router]);
+
+  return null;
+}

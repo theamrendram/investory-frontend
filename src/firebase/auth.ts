@@ -12,7 +12,6 @@ import getIdToken from "@/firebase/getIdToken";
 const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    console.log("User signed in:", result);
     console.log("User signed in:", result.user);
     const user = result.user;
 
@@ -23,19 +22,20 @@ const signInWithGoogle = async () => {
         firebase_uid: user.uid,
         name: user.displayName,
         email: user.email,
-      }
+      },
     );
-    console.log("get user", getUser);
+    const userFromDB = getUser.data;
 
     // set user in store
-    if (user && getUser) {
+    if (user && userFromDB) {
+      console.log("getUser", userFromDB);
       const userData = {
         uid: user.uid,
         name: user.displayName,
         email: user.email,
         avatar: user.photoURL,
-        amount: Math.round(getUser.data.amount),
-        level: getUser.data.currentLevel,
+        amount: Math.round(userFromDB.data.amount),
+        level: userFromDB.data.currentLevel,
         idToken: await getIdToken(),
       };
       const setUser = useUserStore.getState().setUser;
@@ -47,34 +47,44 @@ const signInWithGoogle = async () => {
     console.error("Error during sign-in:", error);
   }
 };
-// handleLogin and handleSignUp functions
-const handleLogin = async (email: string, password: string) => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const setUser = useUserStore.getState().setUser;
-    setUser(userCredential.user as any);
-    console.log("User signed in:", userCredential.user);
-  } catch (error) {
-    console.error("Error during sign-in:", error);
-  }
-};
 
 const handleSignUp = async (email: string, password: string) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
+    const user = userCredential.user;
+
+    // Fetch user data from backend
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users`,
+      {
+        firebase_uid: user.uid,
+        name: user.displayName || user.email?.split("@")[0],
+        email: user.email,
+      },
+    );
+
+    // Update user store with fresh data
+    const userData = {
+      uid: user.uid,
+      name: user.displayName || user.email?.split("@")[0],
+      email: user.email,
+      avatar: user.photoURL,
+      amount: Math.round(response.data.data.amount),
+      level: response.data.data.currentLevel,
+      idToken: await getIdToken(),
+    };
+
     const setUser = useUserStore.getState().setUser;
-    setUser(userCredential.user as any);
+    setUser(userData as any);
     console.log("User signed up:", userCredential.user);
+    return user;
   } catch (error) {
     console.error("Error during sign-up:", error);
+    throw error;
   }
 };
 
@@ -90,4 +100,4 @@ const signOutUser = async () => {
   }
 };
 
-export { signInWithGoogle, signOutUser, handleLogin, handleSignUp };
+export { signInWithGoogle, signOutUser, handleSignUp };
