@@ -62,6 +62,28 @@ const level3Questions: QuizQuestion[] = [
     ],
     answer: 0,
   },
+  {
+    id: 6,
+    question: "What is the typical duration of a bear market?",
+    options: [
+      "Several months to a few years",
+      "Only a few days",
+      "Exactly one year",
+      "Bear markets don't have a typical duration",
+    ],
+    answer: 0,
+  },
+  {
+    id: 7,
+    question: "Which of the following is a sign of a bull market?",
+    options: [
+      "Stock prices consistently rising over time",
+      "High unemployment rates",
+      "Economic recession",
+      "Decreasing investor confidence",
+    ],
+    answer: 0,
+  },
 ];
 
 export default level3Questions;

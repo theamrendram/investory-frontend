@@ -15,6 +15,8 @@ interface RewardCardProps {
   money: number;
   isCompleted: boolean;
   onClaim: () => void;
+  levelId?: number;
+  levelTitle?: string;
 }
 
 export default function RewardCard({
@@ -22,6 +24,8 @@ export default function RewardCard({
   money,
   isCompleted,
   onClaim,
+  levelId = 1,
+  levelTitle = "Level Reward",
 }: RewardCardProps) {
   const [showModal, setShowModal] = useState(false);
 
@@ -38,7 +42,7 @@ export default function RewardCard({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Level Reward</CardTitle>
+          <CardTitle>{levelTitle}</CardTitle>
           <CardDescription>
             Complete all tasks to earn this reward
           </CardDescription>
@@ -62,13 +66,21 @@ export default function RewardCard({
           <Button
             className="w-full"
             disabled={!isCompleted}
-            onClick={handleClaim}>
+            onClick={handleClaim}
+          >
             {isCompleted ? "Claim Reward" : "Complete All Tasks"}
           </Button>
         </CardFooter>
       </Card>
 
-      <RewardClaimModal show={showModal} onClose={() => handleCloseModal()} />
+      <RewardClaimModal
+        isOpen={showModal}
+        onClose={() => handleCloseModal()}
+        levelId={levelId}
+        badgeName={badge}
+        moneyAwarded={money}
+        newBalance={0}
+      />
     </>
   );
 }

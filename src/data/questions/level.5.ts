@@ -62,6 +62,29 @@ const level5Questions: QuizQuestion[] = [
     ],
     answer: 0,
   },
+  {
+    id: 6,
+    question:
+      "What percentage of your portfolio should typically be in high-risk investments?",
+    options: [
+      "A small percentage based on your risk tolerance",
+      "100% for maximum returns",
+      "0% to avoid all risk",
+      "Exactly 50%",
+    ],
+    answer: 0,
+  },
+  {
+    id: 7,
+    question: "What is the main benefit of having a diversified portfolio?",
+    options: [
+      "Reduced risk of losing all your money if one investment fails",
+      "Guaranteed higher returns",
+      "Lower taxes",
+      "Faster trading execution",
+    ],
+    answer: 0,
+  },
 ];
 
 export default level5Questions;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -12,6 +12,9 @@ import {
   ChevronRight,
   CircleHelp,
   Lightbulb,
+  Lock,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -26,8 +29,22 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import GameLayout from "@/components/game-layout";
-import { useEffect } from "react";
+import RewardClaimModal from "@/components/reward-claim-modal";
+import { QuizNavigation } from "@/components/quiz-navigation";
+import { QuizResults, type QuizResult } from "@/components/quiz-results";
+import { useProgressStore } from "@/store/progress-store";
+import {
+  fetchUserProgress,
+  updateLevelTasks,
+  submitQuiz,
+  completeLevel,
+  resetQuiz,
+} from "@/lib/api/progress";
+import { toast } from "sonner";
 
 const levelData = [
   {
@@ -211,10 +228,28 @@ const questionImports: Record<number, () => Promise<any>> = {
   5: () => import("@/data/questions/level.5"),
 };
 
-function QuestionsSection({ levelId }: { levelId: number }) {
+function QuestionsSection({
+  levelId,
+  onClaimReward,
+}: {
+  levelId: number;
+  onClaimReward: () => void;
+}) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [showScore, setShowScore] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quizResults, setQuizResults] = useState<QuizResult | null>(null);
+
+  const {
+    levels,
+    submitQuiz: updateStoreQuiz,
+    setError,
+    clearError,
+  } = useProgressStore();
+
+  const levelProgress = levels[levelId];
 
   useEffect(() => {
     if (questionImports[levelId]) {
@@ -222,62 +257,213 @@ function QuestionsSection({ levelId }: { levelId: number }) {
     }
   }, [levelId]);
 
+  // Load existing quiz answers if available
+  useEffect(() => {
+    if (levelProgress?.quizAnswers) {
+      setAnswers(levelProgress.quizAnswers);
+      if (levelProgress.quizScore > 0) {
+        // Show results if quiz was already completed
+        const score = levelProgress.quizScore;
+        const totalQuestions = levelProgress.totalQuestions;
+        const percentage = (score / totalQuestions) * 100;
+        const passed = percentage >= 70;
+
+        const results: QuizResult = {
+          score,
+          totalQuestions,
+          percentage,
+          passed,
+          answers: questions.map((q) => ({
+            questionId: q.id,
+            question: q.question,
+            userAnswer: levelProgress.quizAnswers[q.id],
+            correctAnswer: q.answer,
+            isCorrect: levelProgress.quizAnswers[q.id] === q.answer,
+            options: q.options,
+          })),
+        };
+
+        setQuizResults(results);
+        setShowResults(true);
+      }
+    }
+  }, [levelProgress, questions]);
+
   const handleAnswer = (qid: number, idx: number) => {
+    if (showResults) return; // Don't allow changes after submission
     setAnswers((prev) => ({ ...prev, [qid]: idx }));
   };
 
-  const score = questions.reduce(
-    (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
-    0
-  );
+  const currentQuestion = questions[currentQuestionIndex];
+  const isAnswered =
+    currentQuestion && answers.hasOwnProperty(currentQuestion.id);
+  const allAnswered =
+    questions.length > 0 &&
+    questions.every((q) => answers.hasOwnProperty(q.id));
 
-  if (!questions.length) return null;
+  const nextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
 
+  const previousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!allAnswered) {
+      toast.error("Please answer all questions before submitting");
+      return;
+    }
+
+    setIsSubmitting(true);
+    clearError();
+
+    try {
+      const score = questions.reduce(
+        (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
+        0,
+      );
+
+      // Submit to backend
+      await submitQuiz(levelId, answers, score, questions.length);
+
+      // Update store
+      updateStoreQuiz(levelId, answers, score, questions.length);
+
+      // Create results object
+      const percentage = (score / questions.length) * 100;
+      const passed = percentage >= 70;
+
+      const results: QuizResult = {
+        score,
+        totalQuestions: questions.length,
+        percentage,
+        passed,
+        answers: questions.map((q) => ({
+          questionId: q.id,
+          question: q.question,
+          userAnswer: answers[q.id],
+          correctAnswer: q.answer,
+          isCorrect: answers[q.id] === q.answer,
+          options: q.options,
+        })),
+      };
+
+      setQuizResults(results);
+      setShowResults(true);
+
+      if (passed) {
+        toast.success(
+          `Quiz passed! You scored ${score}/${questions.length} (${Math.round(percentage)}%)`,
+        );
+      } else {
+        toast.error(
+          `Quiz failed. You scored ${score}/${questions.length} (${Math.round(percentage)}%). You need 70% to pass.`,
+        );
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to submit quiz",
+      );
+      toast.error("Failed to submit quiz. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRetryQuiz = async () => {
+    try {
+      await resetQuiz(levelId);
+      setAnswers({});
+      setShowResults(false);
+      setQuizResults(null);
+      setCurrentQuestionIndex(0);
+      clearError();
+      toast.info("Quiz reset. You can try again!");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to reset quiz");
+      toast.error("Failed to reset quiz. Please try again.");
+    }
+  };
+
+  if (!questions.length) {
+    return (
+      <Card className="mt-6">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="ml-2">Loading quiz...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show results if quiz is completed
+  if (showResults && quizResults) {
+    return (
+      <div className="mt-6">
+        <QuizResults
+          results={quizResults}
+          onRetry={handleRetryQuiz}
+          onClaimReward={onClaimReward}
+        />
+      </div>
+    );
+  }
+
+  // Show question-by-question quiz
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>Quiz</CardTitle>
-        <CardDescription>Test your knowledge for this level</CardDescription>
+        <CardDescription>
+          Test your knowledge for this level. You need 70% (5 out of 7) to pass.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {questions.map((q) => (
-          <div key={q.id} className="mb-6">
-            <p className="font-medium mb-2">{q.question}</p>
-            <div className="space-y-2">
-              {q.options.map((opt: string, idx: number) => (
-                <label
-                  key={idx}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name={`q${q.id}`}
-                    value={idx}
-                    checked={answers[q.id] === idx}
-                    onChange={() => handleAnswer(q.id, idx)}
-                    disabled={showScore}
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-        {!showScore && (
-          <Button
-            className="mt-4"
-            disabled={Object.keys(answers).length !== questions.length}
-            onClick={() => setShowScore(true)}>
-            Submit Quiz
-          </Button>
-        )}
-        {showScore && (
-          <div className="mt-4 p-4 rounded bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200">
-            <p className="font-semibold">Quiz Complete!</p>
-            <p>
-              You scored {score} out of {questions.length}.
-            </p>
-          </div>
-        )}
+      <CardContent className="space-y-6">
+        {/* Current Question */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">{currentQuestion?.question}</h3>
+
+          <RadioGroup
+            value={
+              currentQuestion ? answers[currentQuestion.id]?.toString() : ""
+            }
+            onValueChange={(value) => {
+              if (currentQuestion) {
+                handleAnswer(currentQuestion.id, parseInt(value));
+              }
+            }}
+            className="space-y-3"
+          >
+            {currentQuestion?.options.map((option: string, idx: number) => (
+              <div key={idx} className="flex items-center space-x-2">
+                <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
+                <Label
+                  htmlFor={`option-${idx}`}
+                  className="flex-1 cursor-pointer rounded-lg border p-3 transition-colors hover:bg-muted"
+                >
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+
+        {/* Navigation */}
+        <QuizNavigation
+          currentQuestionIndex={currentQuestionIndex}
+          totalQuestions={questions.length}
+          isAnswered={isAnswered}
+          allAnswered={allAnswered}
+          onPrevious={previousQuestion}
+          onNext={nextQuestion}
+          onSubmit={handleSubmitQuiz}
+          isSubmitting={isSubmitting}
+        />
       </CardContent>
     </Card>
   );
@@ -291,38 +477,194 @@ export default function LevelPage() {
 
   const [activeTab, setActiveTab] = useState("story");
   const [tasks, setTasks] = useState(level.tasks);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [rewardData, setRewardData] = useState<any>(null);
+
+  const {
+    currentLevel,
+    levels,
+    badges,
+    updateLevelTasks: updateStoreTasks,
+    completeLevel: updateStoreComplete,
+    setProgress,
+    setError,
+    clearError,
+    isLoading: storeLoading,
+  } = useProgressStore();
+
+  const levelProgress = levels[levelId];
+
+  // Check if level is unlocked
+  const isLevelUnlocked = currentLevel >= levelId;
+
+  // Load user progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        setIsLoading(true);
+        const progress = await fetchUserProgress();
+        setProgress(progress);
+
+        // Load existing task completion
+        if (progress.progress[levelId]?.tasksCompleted) {
+          const completedTaskIds = progress.progress[levelId].tasksCompleted;
+          setTasks((prev) =>
+            prev.map((task) => ({
+              ...task,
+              completed: completedTaskIds.includes(task.id),
+            })),
+          );
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to load progress",
+        );
+        toast.error("Failed to load your progress");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [levelId, setProgress, setError]);
+
+  // Redirect if level is locked
+  useEffect(() => {
+    if (!isLoading && !isLevelUnlocked) {
+      toast.error(
+        `Level ${levelId} is locked. Complete previous levels first.`,
+      );
+      router.push("/play");
+    }
+  }, [isLoading, isLevelUnlocked, levelId, router]);
 
   const completedTasks = tasks.filter((task) => task.completed).length;
   const progress = (completedTasks / tasks.length) * 100;
 
+  // Debounced task update
+  const debouncedUpdateTasks = useCallback(
+    debounce(async (taskIds: number[]) => {
+      try {
+        await updateLevelTasks(levelId, taskIds);
+        updateStoreTasks(levelId, taskIds);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to update tasks",
+        );
+        toast.error("Failed to save task progress");
+      }
+    }, 500),
+    [levelId, updateStoreTasks, setError],
+  );
+
   const toggleTask = (taskId: number) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
-
-    // Check if all tasks are completed
     const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
+      task.id === taskId ? { ...task, completed: !task.completed } : task,
     );
 
-    if (updatedTasks.every((task) => task.completed)) {
-      setIsCompleted(true);
-    } else {
-      setIsCompleted(false);
+    setTasks(updatedTasks);
+
+    const completedTaskIds = updatedTasks
+      .filter((task) => task.completed)
+      .map((task) => task.id);
+
+    debouncedUpdateTasks(completedTaskIds);
+  };
+
+  const handleCompleteLevel = async () => {
+    try {
+      clearError();
+
+      // Check if quiz is passed
+      const quizScore = levelProgress?.quizScore || 0;
+      const totalQuestions = levelProgress?.totalQuestions || 0;
+      const passPercentage =
+        totalQuestions > 0 ? (quizScore / totalQuestions) * 100 : 0;
+
+      if (passPercentage < 70) {
+        toast.error(
+          "You must pass the quiz (70% or higher) to complete this level",
+        );
+        return;
+      }
+
+      // Auto-complete all tasks when quiz passes
+      const allTaskIds = tasks.map((t) => t.id);
+      await updateLevelTasks(levelId, allTaskIds);
+      updateStoreTasks(levelId, allTaskIds);
+
+      // Complete level
+      const result = await completeLevel(
+        levelId,
+        level.reward.money,
+        level.reward.badge,
+      );
+
+      // Update store
+      updateStoreComplete(levelId, result.newBalance, {
+        levelId,
+        badgeName: result.badgeEarned,
+        earnedAt: new Date().toISOString(),
+      });
+
+      // Show reward modal
+      setRewardData({
+        levelId,
+        badgeName: result.badgeEarned,
+        moneyAwarded: result.moneyAwarded,
+        newBalance: result.newBalance,
+      });
+      setShowRewardModal(true);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to complete level",
+      );
+      toast.error(
+        error instanceof Error ? error.message : "Failed to complete level",
+      );
     }
   };
 
-  const completeLevel = () => {
-    // In a real app, you would save progress to the backend here
-    if (levelId < 5) {
-      router.push(`/play/levels/${levelId + 1}`);
-    } else {
-      router.push("/play");
-    }
+  const canCompleteLevel = () => {
+    const quizPassed =
+      levelProgress?.quizScore && levelProgress?.totalQuestions
+        ? (levelProgress.quizScore / levelProgress.totalQuestions) * 100 >= 70
+        : false;
+
+    return quizPassed;
   };
+
+  // Loading state
+  if (isLoading || storeLoading) {
+    return (
+      <GameLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading level...</p>
+          </div>
+        </div>
+      </GameLayout>
+    );
+  }
+
+  // Level locked
+  if (!isLevelUnlocked) {
+    return (
+      <GameLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Alert className="max-w-md">
+            <Lock className="h-4 w-4" />
+            <AlertDescription>
+              Level {levelId} is locked. Complete previous levels to unlock this
+              level.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </GameLayout>
+    );
+  }
 
   return (
     <GameLayout>
@@ -342,24 +684,12 @@ export default function LevelPage() {
               </Link>
             </Button>
           )}
-          {levelId < 5 && !isCompleted && (
+          {levelId < 5 && (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/play/levels/${levelId + 1}`}>
                 Next Level
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-            </Button>
-          )}
-          {isCompleted && (
-            <Button size="sm" onClick={completeLevel}>
-              {levelId < 5 ? (
-                <>
-                  Next Level
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              ) : (
-                "Complete Game"
-              )}
             </Button>
           )}
         </div>
@@ -370,8 +700,9 @@ export default function LevelPage() {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="story">
                 <BookOpen className="mr-2 h-4 w-4" />
                 Story
@@ -379,10 +710,6 @@ export default function LevelPage() {
               <TabsTrigger value="objectives">
                 <Lightbulb className="mr-2 h-4 w-4" />
                 Objectives
-              </TabsTrigger>
-              <TabsTrigger value="tasks">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Tasks
               </TabsTrigger>
             </TabsList>
             <TabsContent value="story" className="mt-4">
@@ -394,7 +721,7 @@ export default function LevelPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose max-w-none dark:prose-invert">
+                  <div className="prose dark:prose-invert max-w-none">
                     <p>{level.story}</p>
                     <div className="mt-4 rounded-lg bg-muted p-4">
                       <div className="flex items-start gap-2">
@@ -440,53 +767,6 @@ export default function LevelPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="tasks" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tasks</CardTitle>
-                  <CardDescription>
-                    Complete these tasks to finish the level
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-4">
-                    {tasks.map((task) => (
-                      <li key={task.id} className="flex items-start gap-2">
-                        <div
-                          className={cn(
-                            "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border",
-                            task.completed
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground"
-                          )}
-                          onClick={() => toggleTask(task.id)}>
-                          {task.completed && (
-                            <CheckCircle2 className="h-4 w-4" />
-                          )}
-                        </div>
-                        <span
-                          className={cn(
-                            task.completed && "line-through opacity-70"
-                          )}>
-                          {task.title}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <div className="w-full">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm">Progress</span>
-                      <span className="text-sm">
-                        {completedTasks}/{tasks.length} tasks
-                      </span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-                </CardFooter>
-              </Card>
-            </TabsContent>
           </Tabs>
         </div>
 
@@ -495,7 +775,7 @@ export default function LevelPage() {
             <CardHeader>
               <CardTitle>Level Reward</CardTitle>
               <CardDescription>
-                Complete all tasks to earn this reward
+                Pass the quiz (70% or higher) to earn this reward
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -518,9 +798,10 @@ export default function LevelPage() {
             <CardFooter>
               <Button
                 className="w-full"
-                disabled={!isCompleted}
-                onClick={completeLevel}>
-                {isCompleted ? "Claim Reward" : "Complete All Tasks"}
+                disabled={!canCompleteLevel()}
+                onClick={handleCompleteLevel}
+              >
+                {canCompleteLevel() ? "Claim Reward" : "Pass Quiz to Unlock"}
               </Button>
             </CardFooter>
           </Card>
@@ -535,7 +816,8 @@ export default function LevelPage() {
                 <li>
                   <Link
                     href="#"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline">
+                    className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
                     <BookOpen className="h-4 w-4" />
                     <span>Read the glossary</span>
                   </Link>
@@ -543,7 +825,8 @@ export default function LevelPage() {
                 <li>
                   <Link
                     href="#"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline">
+                    className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
                     <CircleHelp className="h-4 w-4" />
                     <span>Watch tutorial video</span>
                   </Link>
@@ -553,7 +836,32 @@ export default function LevelPage() {
           </Card>
         </div>
       </div>
-      <QuestionsSection levelId={levelId} />
+
+      <QuestionsSection levelId={levelId} onClaimReward={handleCompleteLevel} />
+
+      {/* Reward Modal */}
+      {showRewardModal && rewardData && (
+        <RewardClaimModal
+          isOpen={showRewardModal}
+          onClose={() => setShowRewardModal(false)}
+          levelId={rewardData.levelId}
+          badgeName={rewardData.badgeName}
+          moneyAwarded={rewardData.moneyAwarded}
+          newBalance={rewardData.newBalance}
+        />
+      )}
     </GameLayout>
   );
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 }

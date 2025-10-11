@@ -58,6 +58,28 @@ const level4Questions: QuizQuestion[] = [
     options: ["Limit order", "Market order", "Stop loss order", "Day order"],
     answer: 0,
   },
+  {
+    id: 6,
+    question: "What is a stop-loss order?",
+    options: [
+      "An order to sell a stock if it falls below a certain price",
+      "An order to buy a stock at a specific price",
+      "An order that is only valid for one day",
+      "An order to buy more shares of a stock",
+    ],
+    answer: 0,
+  },
+  {
+    id: 7,
+    question: "What is the difference between a day order and a GTC order?",
+    options: [
+      "Day order expires at market close, GTC order stays active until cancelled",
+      "Day order is for buying, GTC order is for selling",
+      "There is no difference",
+      "Day order is cheaper than GTC order",
+    ],
+    answer: 0,
+  },
 ];
 
 export default level4Questions;

@@ -63,6 +63,28 @@ const level2Questions: QuizQuestion[] = [
     ],
     answer: 0,
   },
+  {
+    id: 6,
+    question: "What is the minimum investment amount for most IPOs in India?",
+    options: [
+      "₹10,000 - ₹15,000",
+      "₹1,000 - ₹5,000",
+      "₹50,000 - ₹1,00,000",
+      "There is no minimum amount",
+    ],
+    answer: 0,
+  },
+  {
+    id: 7,
+    question: "Which regulatory body oversees IPOs in India?",
+    options: [
+      "SEBI (Securities and Exchange Board of India)",
+      "RBI (Reserve Bank of India)",
+      "NSE (National Stock Exchange)",
+      "BSE (Bombay Stock Exchange)",
+    ],
+    answer: 0,
+  },
 ];
 
 export default level2Questions;

@@ -22,9 +22,10 @@ import HelpCard from "@/components/help-card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { usePathname } from "next/navigation";
-import axiosInstance from "@/lib/axios-instance";
+import createAxiosInstance from "@/lib/axios-instance";
 import { useUserStore } from "@/store/user-store";
 import level1Questions from "@/data/questions/level.1";
+import { QuizComponent } from "@/components/quiz-component";
 
 const levelData = {
   id: 1,
@@ -153,74 +154,13 @@ const quizQuestions: QuizQuestion[] = [
 
 function getQuizScore(
   quizAnswers: Record<number, number>,
-  quizQuestions: QuizQuestion[]
+  quizQuestions: QuizQuestion[],
 ) {
   let score = 0;
   for (const q of quizQuestions) {
     if (quizAnswers[q.id] === q.answer) score++;
   }
   return score;
-}
-
-function QuestionsSection() {
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [showScore, setShowScore] = useState(false);
-  const score = level1Questions.reduce(
-    (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
-    0
-  );
-
-  const handleAnswer = (qid: number, idx: number) =>
-    setAnswers((prev) => ({ ...prev, [qid]: idx }));
-
-  return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Quiz</CardTitle>
-        <CardDescription>Test your knowledge for this level</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {level1Questions.map((q) => (
-          <div key={q.id} className="mb-6">
-            <p className="font-medium mb-2">{q.question}</p>
-            <div className="space-y-2">
-              {q.options.map((opt, idx) => (
-                <label
-                  key={idx}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name={`q${q.id}`}
-                    value={idx}
-                    checked={answers[q.id] === idx}
-                    onChange={() => handleAnswer(q.id, idx)}
-                    disabled={showScore}
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-        {!showScore && (
-          <button
-            className="mt-4 px-4 py-2 bg-primary text-white rounded"
-            disabled={Object.keys(answers).length !== level1Questions.length}
-            onClick={() => setShowScore(true)}>
-            Submit Quiz
-          </button>
-        )}
-        {showScore && (
-          <div className="mt-4 p-4 rounded bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200">
-            <p className="font-semibold">Quiz Complete!</p>
-            <p>
-              You scored {score} out of {level1Questions.length}.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
 }
 
 export default function Level1Page() {
@@ -231,11 +171,14 @@ export default function Level1Page() {
   const [tasks, setTasks] = useState(levelData.tasks);
   const [isCompleted, setIsCompleted] = useState(false);
   const [companyAnswers, setCompanyAnswers] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [hasCompleted, setHasCompleted] = useState(false);
   const hasCalledComplete = useRef(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizTotal, setQuizTotal] = useState(0);
 
   const user = useUserStore((state) => state.user);
 
@@ -245,13 +188,13 @@ export default function Level1Page() {
   const toggleTask = (taskId: number) => {
     setTasks((prev) =>
       prev.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+        task.id === taskId ? { ...task, completed: !task.completed } : task,
+      ),
     );
 
     // Check if all tasks are completed
     const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
+      task.id === taskId ? { ...task, completed: !task.completed } : task,
     );
 
     if (updatedTasks.every((task) => task.completed)) {
@@ -267,20 +210,39 @@ export default function Level1Page() {
       return;
     }
 
-    try {
-      const response = await axiosInstance.put(
-        `/api/progress/level?level=${Number(levelPath) + 1}`
-      );
-      if (response.status === 200) {
-        if (Number(levelPath) < 5) router.push(`./${Number(levelPath) + 1}`);
-        else router.push("/play");
-      } else {
-        alert("Error completing level");
-      }
-    } catch (error) {
-      console.log("error", error);
-      alert("Error completing level");
+    if (!quizCompleted) {
+      alert("Please complete the quiz before claiming rewards.");
       return;
+    }
+
+    const percentage = (quizScore / quizTotal) * 100;
+    if (percentage < 70) {
+      alert(
+        `You need at least 70% to pass. Your score: ${percentage.toFixed(1)}%`,
+      );
+      return;
+    }
+
+    try {
+      const axiosInstance = await createAxiosInstance();
+      const response = await axiosInstance.post(
+        `/api/progress/level/${levelData.id}/complete`,
+        {
+          rewardMoney: levelData.reward.money,
+          badgeName: levelData.reward.badge,
+        },
+      );
+
+      if (response.status === 200) {
+        if (levelData.id < 5) {
+          router.push(`./${levelData.id + 1}`);
+        } else {
+          router.push("/play");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error completing level:", error);
+      alert(error.response?.data?.message || "Error completing level");
     }
   };
 
@@ -300,8 +262,8 @@ export default function Level1Page() {
       // Mark the task as completed
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === 2 ? { ...task, completed: true } : task
-        )
+          task.id === 2 ? { ...task, completed: true } : task,
+        ),
       );
     }
   };
@@ -313,23 +275,23 @@ export default function Level1Page() {
       if (Object.keys(updated).length === quizQuestions.length) {
         setTasks((prev) =>
           prev.map((task) =>
-            task.id === 3 ? { ...task, completed: true } : task
-          )
+            task.id === 3 ? { ...task, completed: true } : task,
+          ),
         );
       }
       return updated;
     });
   };
 
-  useEffect(() => {
-    if (isCompleted && !hasCalledComplete.current) {
-      hasCalledComplete.current = true;
-      completeLevel();
-    }
-    if (!isCompleted) {
-      hasCalledComplete.current = false;
-    }
-  }, [isCompleted]);
+  const handleQuizComplete = async (score: number, total: number) => {
+    console.log(`Quiz completed: ${score}/${total}`);
+    setQuizScore(score);
+    setQuizTotal(total);
+    setQuizCompleted(true);
+    // Quiz progress is already saved by QuizComponent
+  };
+
+  // Removed auto-completion useEffect - level now only completes when user clicks "Claim Reward"
 
   return (
     <GameLayout>
@@ -346,7 +308,8 @@ export default function Level1Page() {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full">
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="story">
                 <BookOpen className="mr-2 h-4 w-4" />
@@ -370,7 +333,7 @@ export default function Level1Page() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose max-w-none dark:prose-invert">
+                  <div className="prose dark:prose-invert max-w-none">
                     <p>{levelData.story}</p>
                     <div className="mt-4 rounded-lg bg-muted p-4">
                       <div className="flex items-start gap-2">
@@ -426,17 +389,19 @@ export default function Level1Page() {
                             "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border",
                             tasks[0].completed
                               ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground"
+                              : "border-muted-foreground",
                           )}
-                          onClick={() => toggleTask(1)}>
+                          onClick={() => toggleTask(1)}
+                        >
                           {tasks[0].completed && (
                             <CheckCircle2 className="h-4 w-4" />
                           )}
                         </div>
                         <span
                           className={cn(
-                            tasks[0].completed && "line-through opacity-70"
-                          )}>
+                            tasks[0].completed && "line-through opacity-70",
+                          )}
+                        >
                           {tasks[0].title}
                         </span>
                       </div>
@@ -450,7 +415,8 @@ export default function Level1Page() {
                               frameBorder="0"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                               referrerPolicy="strict-origin-when-cross-origin"
-                              allowFullScreen></iframe>
+                              allowFullScreen
+                            ></iframe>
                           </div>
                         </div>
                       )}
@@ -463,17 +429,19 @@ export default function Level1Page() {
                             "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border",
                             tasks[1].completed
                               ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground"
+                              : "border-muted-foreground",
                           )}
-                          onClick={() => toggleTask(2)}>
+                          onClick={() => toggleTask(2)}
+                        >
                           {tasks[1].completed && (
                             <CheckCircle2 className="h-4 w-4" />
                           )}
                         </div>
                         <span
                           className={cn(
-                            tasks[1].completed && "line-through opacity-70"
-                          )}>
+                            tasks[1].completed && "line-through opacity-70",
+                          )}
+                        >
                           {tasks[1].title}
                         </span>
                       </div>
@@ -482,13 +450,15 @@ export default function Level1Page() {
                           {companies.map((company) => (
                             <div
                               key={company.name}
-                              className="rounded-lg border p-3">
+                              className="rounded-lg border p-3"
+                            >
                               <p className="mb-2 font-medium">{company.name}</p>
                               <RadioGroup
                                 value={companyAnswers[company.name]}
                                 onValueChange={(value) =>
                                   handleCompanyTypeChange(company.name, value)
-                                }>
+                                }
+                              >
                                 <div className="flex items-center space-x-2">
                                   <RadioGroupItem
                                     value="public"
@@ -521,17 +491,19 @@ export default function Level1Page() {
                             "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border",
                             tasks[2].completed
                               ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground"
+                              : "border-muted-foreground",
                           )}
-                          onClick={() => toggleTask(3)}>
+                          onClick={() => toggleTask(3)}
+                        >
                           {tasks[2].completed && (
                             <CheckCircle2 className="h-4 w-4" />
                           )}
                         </div>
                         <span
                           className={cn(
-                            tasks[2].completed && "line-through opacity-70"
-                          )}>
+                            tasks[2].completed && "line-through opacity-70",
+                          )}
+                        >
                           {tasks[2].title}
                         </span>
                       </div>
@@ -544,11 +516,13 @@ export default function Level1Page() {
                                 value={quizAnswers[q.id]?.toString()}
                                 onValueChange={(val) =>
                                   handleQuizAnswer(q.id, Number(val))
-                                }>
+                                }
+                              >
                                 {q.options.map((opt, idx) => (
                                   <div
                                     key={idx}
-                                    className="flex items-center space-x-2">
+                                    className="flex items-center space-x-2"
+                                  >
                                     <RadioGroupItem
                                       value={idx.toString()}
                                       id={`q${q.id}-opt${idx}`}
@@ -562,7 +536,7 @@ export default function Level1Page() {
                             </div>
                           ))}
                           {tasks[2].completed && (
-                            <div className="rounded-lg border p-3 bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-200 mt-4">
+                            <div className="mt-4 rounded-lg border bg-green-50 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-200">
                               <p className="font-semibold">Quiz Complete!</p>
                               <p>
                                 You scored{" "}
@@ -585,7 +559,7 @@ export default function Level1Page() {
                                       width={100}
                                       height={100}
                                       alt="National Stock Exchange"
-                                      className="w-full h-ful"
+                                      className="h-ful w-full"
                                     />
                                   </div>
                                 </div>
@@ -612,7 +586,7 @@ export default function Level1Page() {
                                       width={100}
                                       height={100}
                                       alt="Bombay Stock Exchange"
-                                      className="w-full h-full"
+                                      className="h-full w-full"
                                     />
                                   </div>
                                 </div>
@@ -658,8 +632,10 @@ export default function Level1Page() {
           <RewardCard
             badge={levelData.reward.badge}
             money={levelData.reward.money}
-            isCompleted={isCompleted}
+            isCompleted={isCompleted && quizCompleted}
             onClaim={completeLevel}
+            levelId={levelData.id}
+            levelTitle={`Level ${levelData.id} Reward`}
           />
 
           <HelpCard
@@ -670,7 +646,12 @@ export default function Level1Page() {
           />
         </div>
       </div>
-      <QuestionsSection />
+      <QuizComponent
+        questions={level1Questions}
+        onComplete={handleQuizComplete}
+        showDialog={true}
+        levelId={levelData.id}
+      />
     </GameLayout>
   );
 }
