@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import GameLayout from "@/components/game-layout";
 import { useProgressStore } from "@/store/progress-store";
+import { useUserStore } from "@/store/user-store";
 import { fetchUserProgress } from "@/lib/api/progress";
 import { toast } from "sonner";
 
@@ -52,6 +53,102 @@ export default function DashboardPage() {
     setError,
     clearError,
   } = useProgressStore();
+
+  const user = useUserStore((state) => state.user);
+
+  // Helper function to format dates
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "Yesterday";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return `${Math.floor(diffInDays / 30)} months ago`;
+  };
+
+  // Generate recent activities from progress data
+  const getRecentActivities = () => {
+    const activities: Array<{
+      type: string;
+      level?: number;
+      badge?: string;
+      task?: string;
+      reward?: number;
+      date: string;
+    }> = [];
+
+    // Add completed levels
+    Object.entries(levels).forEach(([levelId, levelProgress]) => {
+      if (levelProgress.isCompleted && levelProgress.completedAt) {
+        const level = levelData.find((l) => l.id === parseInt(levelId));
+        activities.push({
+          type: "level_complete",
+          level: parseInt(levelId),
+          reward: level?.reward || 0,
+          date: formatDate(levelProgress.completedAt),
+        });
+      }
+    });
+
+    // Add earned badges
+    badges.forEach((badge) => {
+      activities.push({
+        type: "badge_earned",
+        badge: badge.badgeName,
+        date: formatDate(badge.earnedAt),
+      });
+    });
+
+    // Sort by date (most recent first)
+    return activities
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5); // Show only 5 most recent
+  };
+
+  // Get learning resources based on current level
+  const getLearningResources = () => {
+    const resources = [
+      {
+        level: 1,
+        title: "Stock Market Basics",
+        type: "Article",
+        difficulty: "Beginner",
+      },
+      {
+        level: 2,
+        title: "Understanding IPOs",
+        type: "Video",
+        difficulty: "Intermediate",
+      },
+      {
+        level: 3,
+        title: "Bull & Bear Markets",
+        type: "Article",
+        difficulty: "Intermediate",
+      },
+      {
+        level: 4,
+        title: "Trading Strategies",
+        type: "Course",
+        difficulty: "Advanced",
+      },
+      {
+        level: 5,
+        title: "Portfolio Management",
+        type: "Course",
+        difficulty: "Advanced",
+      },
+    ];
+
+    // Show resources for current and next level
+    return resources.filter(
+      (r) => r.level >= currentLevel && r.level <= currentLevel + 1,
+    );
+  };
 
   // Load user progress on mount
   useEffect(() => {
@@ -73,6 +170,19 @@ export default function DashboardPage() {
 
     loadProgress();
   }, [setProgress, setError, clearError]);
+
+  // Sync user store with progress store
+  useEffect(() => {
+    // Sync user amount with progress store if different
+    if (user?.amount && user.amount !== totalBalance) {
+      setProgress({ totalBalance: user.amount });
+    }
+
+    // Sync current level
+    if (user?.level && user.level !== currentLevel) {
+      setProgress({ currentLevel: user.level });
+    }
+  }, [user, totalBalance, currentLevel, setProgress]);
 
   const levelData = [
     {
@@ -187,7 +297,8 @@ export default function DashboardPage() {
   };
 
   const portfolioValue = calculatePortfolioValue();
-  const totalAssets = totalBalance + portfolioValue;
+  const displayBalance = user?.amount ?? totalBalance;
+  const totalAssets = displayBalance + portfolioValue;
 
   if (isLoading) {
     return (
@@ -293,6 +404,25 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Available Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              ₹{displayBalance.toLocaleString()}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Virtual trading money
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
             <CardTitle>Overall Progress</CardTitle>
             <CardDescription>Across all levels</CardDescription>
           </CardHeader>
@@ -301,6 +431,55 @@ export default function DashboardPage() {
               {getOverallProgress()}%
             </div>
             <Progress value={getOverallProgress()} className="h-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Your latest achievements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {getRecentActivities().length > 0 ? (
+              <div className="space-y-3">
+                {getRecentActivities().map((activity, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      {activity.type === "level_complete" && (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      )}
+                      {activity.type === "badge_earned" && (
+                        <Award className="h-4 w-4 text-yellow-600" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {activity.type === "level_complete" &&
+                          `Completed Level ${activity.level}`}
+                        {activity.type === "badge_earned" &&
+                          `Earned ${activity.badge} badge`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.date}
+                      </p>
+                    </div>
+                    {activity.reward && (
+                      <div className="text-sm font-medium text-green-600">
+                        +₹{activity.reward.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                <ListChecks className="mx-auto mb-2 h-12 w-12 opacity-50" />
+                <p>No recent activity</p>
+                <p className="text-sm">
+                  Start completing levels to see your progress!
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -386,50 +565,30 @@ export default function DashboardPage() {
           <CardDescription>Your achievements</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {levelData.map((level) => {
-              const badgeEarned = badges.find((b) => b.levelId === level.id);
-              const isEarned = !!badgeEarned;
-
-              return (
-                <div
-                  key={level.id}
-                  className={cn(
-                    "flex flex-col items-center rounded-lg border p-4 transition-all",
-                    isEarned
-                      ? "border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:border-yellow-800 dark:from-yellow-900/20 dark:to-orange-900/20"
-                      : "border-muted-foreground/20 bg-muted",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "mb-2 flex h-12 w-12 items-center justify-center rounded-full",
-                      isEarned
-                        ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
-                        : "bg-muted-foreground/20 text-muted-foreground",
-                    )}
-                  >
-                    <Award className="h-6 w-6" />
-                  </div>
-                  <p
-                    className={cn(
-                      "text-center text-sm font-medium",
-                      isEarned
-                        ? "text-yellow-900 dark:text-yellow-100"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {level.badge}
-                  </p>
-                  {isEarned && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      +₹{level.reward.toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {badges.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {badges.map((badge) => (
+                <Card key={badge.levelId}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Award className="h-8 w-8 text-primary" />
+                      <div>
+                        <p className="font-medium">{badge.badgeName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(badge.earnedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              <Trophy className="mx-auto mb-2 h-12 w-12 opacity-50" />
+              <p>No badges earned yet. Complete levels to earn badges!</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </GameLayout>
