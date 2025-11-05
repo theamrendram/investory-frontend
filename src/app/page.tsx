@@ -1,4 +1,4 @@
-import MarketSentiment from "@/components/Marketsentiment";
+import Hero from "@/components/Hero";
 import Navbar from "@/components/common/Navbar";
 import StockTicker from "@/components/common/stockticker";
 import MarketSectors from "@/components/marketsectors";
@@ -11,12 +11,12 @@ export default function Home() {
     <section className="min-h-screen bg-primary">
       {/* <StockTicker pauseonhover={true}></StockTicker> */}
       <Navbar />
-      <MarketSentiment />
+      <Hero />
       <MarketSectors />
-      <StockNews/> 
+      <StockNews />
       <Faq />
       <Footer />
-      <Chatbot/>  
+      <Chatbot />
     </section>
   );
 }
